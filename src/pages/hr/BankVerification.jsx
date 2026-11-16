@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api, { errMsg } from '../../services/api';
 import { PageHeader, StatusBadge, Alert } from '../../components/ui';
 
@@ -6,6 +7,7 @@ const LABELS = ['Account holder name matches', 'Account number matches', 'IFSC m
 const getChecks = (checks = []) => checks.length === 7 ? [checks[3], checks[4], checks[5]] : LABELS.map((_, i) => checks[i] === true);
 
 export default function BankVerification() {
+  const nav = useNavigate();
   const [filter, setFilter] = useState('Pending');
   const [rows, setRows] = useState([]);
   const [sel, setSel] = useState(null);
@@ -22,7 +24,11 @@ export default function BankVerification() {
     setErr(''); setMsg('');
     try {
       const { data } = await api.post(`/hr/bank/${sel.userId}/decision`, { decision, checks, reason });
-      setMsg(decision === 'approve' ? 'Bank details verified.' : decision === 'reject' ? 'Bank details rejected.' : 'Audit checklist saved.');
+      if (decision === 'approve') {
+        nav('/hr/dashboard');
+        return;
+      }
+      setMsg(decision === 'reject' ? 'Bank details rejected.' : 'Audit checklist saved.');
       setSel({ ...sel, ...data }); load();
     } catch (e) { setErr(errMsg(e)); }
   };
