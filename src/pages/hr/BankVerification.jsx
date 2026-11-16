@@ -25,7 +25,7 @@ export default function BankVerification() {
     try {
       const { data } = await api.post(`/hr/bank/${sel.userId}/decision`, { decision, checks, reason });
       if (decision === 'approve') {
-        nav('/hr/dashboard');
+        nav('/hr/dashboard', { state: { notice: `Bank details for ${sel.employee?.fullName || 'employee'} verified successfully.` } });
         return;
       }
       setMsg(decision === 'reject' ? 'Bank details rejected.' : 'Audit checklist saved.');

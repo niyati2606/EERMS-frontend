@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import EmployeeTable from '../../components/EmployeeTable';
-import { PageHeader, Hero, Stat } from '../../components/ui';
+import { PageHeader, Hero, Stat, Alert } from '../../components/ui';
 
 export default function HrDashboard() {
+  const location = useLocation();
+  const [notice, setNotice] = useState(location.state?.notice || '');
   const [s, setS] = useState(null);
   useEffect(() => { api.get('/hr/stats').then((r) => setS(r.data)); }, []);
   if (!s) return <div className="text-muted">Loading…</div>;
 
   return (
     <>
+      <Alert type="success" onClose={() => setNotice('')}>{notice}</Alert>
       <Hero eyebrow="HR master data" chips={s.byBranch.map((b) => ({ title: b.branch, sub: `${b.count} active staff`, avatar: b.branch }))}>
         <b>{s.active} active employees</b> across 3 offices. <b>{s.pendingBank}</b> bank verification{s.pendingBank === 1 ? '' : 's'} pending.
       </Hero>
