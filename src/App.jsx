@@ -15,6 +15,7 @@ import HrDashboard from './pages/hr/HrDashboard';
 import EmployeeList from './pages/hr/EmployeeList';
 import EmployeeDetail from './pages/hr/EmployeeDetail';
 import AddEmployee from './pages/hr/AddEmployee';
+import AddFinance from './pages/hr/AddFinance';
 import BankVerification from './pages/hr/BankVerification';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AuditLog from './pages/admin/AuditLog';
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/hr/employees" element={<EmployeeList />} />
         <Route path="/hr/employees/new" element={<AddEmployee />} />
         <Route path="/hr/employees/:id" element={<EmployeeDetail />} />
+        <Route path="/hr/finance" element={<AddFinance />} />
         <Route path="/hr/bank-verification" element={<BankVerification />} />
       </Route>
       <Route element={<Guard roles={['admin']} />}>

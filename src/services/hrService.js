@@ -18,3 +18,7 @@ export function createEmployee(d) {
   fd.append('ifscCode', d.ifscCode.trim().toUpperCase());
   return api.post('/hr/employees', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
 }
+
+export const getFinanceStaff = () => api.get('/hr/finance').then((r) => r.data);
+export const createFinanceStaff = (d) => api.post('/hr/finance', d);
+export const resendSetupEmail = (id) => api.post(`/hr/employees/${id}/resend-setup`).then((r) => r.data);

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api, { errMsg } from '../../services/api';
-import { getHrMeta } from '../../services/hrService';
-import { PageHeader, StatusBadge, Alert, FileViewer, inr, fmtDate } from '../../components/ui';
+import { getHrMeta, resendSetupEmail } from '../../services/hrService';
+import { PageHeader, StatusBadge, Alert, FileViewer, fmtDate } from '../../components/ui';
 import FreezeEmployeeModal from '../../components/FreezeEmployeeModal';
 
 const Row = ({ k, v }) => (<div className="mb-2"><div className="small text-uppercase text-muted">{k}</div><div className="fw-semibold">{v || '—'}</div></div>);
@@ -10,7 +10,6 @@ const Row = ({ k, v }) => (<div className="mb-2"><div className="small text-uppe
 export default function EmployeeDetail() {
   const { id } = useParams();
   const [u, setU] = useState(null);
-  const [claims, setClaims] = useState([]);
   const [meta, setMeta] = useState(null);
   const [edit, setEdit] = useState(null);
   const [showCheque, setShowCheque] = useState(false);
@@ -21,13 +20,20 @@ export default function EmployeeDetail() {
 
   const load = () => {
     api.get(`/hr/employees/${id}`).then((r) => setU(r.data)).catch((e) => setErr(errMsg(e)));
-    api.get(`/hr/employees/${id}/claims`).then((r) => setClaims(r.data));
   };
   useEffect(() => { load(); getHrMeta().then(setMeta); }, [id]); // eslint-disable-line
 
   if (err && !u) return <Alert>{err}</Alert>;
   if (!u) return <div className="text-muted">Loading…</div>;
   const b = u.bank;
+
+  const resendSetup = async () => {
+    setErr(''); setMsg('');
+    try {
+      const res = await resendSetupEmail(u.id);
+      setMsg(res.message || 'Password setup email sent successfully.');
+    } catch (e) { setErr(errMsg(e)); }
+  };
 
   const save = async () => {
     setErr(''); setMsg('');
@@ -52,6 +58,7 @@ export default function EmployeeDetail() {
     <>
       <PageHeader title={u.fullName} sub={u.empCode}>
         <Link className="btn btn-light border" to="/hr/employees">← Back</Link>
+        <button className="btn btn-outline-purple" onClick={resendSetup}>Resend setup email</button>
         {!edit && <button className="btn btn-outline-purple" onClick={startEdit}>Edit</button>}
         {u.role !== 'admin' && <button className={`btn ${u.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'}`} onClick={() => u.status === 'active' ? setShowFreezeModal(true) : toggle(false)}>{u.status === 'active' ? 'Freeze account' : 'Reactivate'}</button>}
       </PageHeader>
@@ -90,12 +97,6 @@ export default function EmployeeDetail() {
               {showCheque && <div className="border rounded mt-3"><FileViewer path={`/hr/bank/${u.id}/cheque`} /></div>}
             </>)}
         </div></div></div>
-
-        <div className="col-12"><div className="card"><div className="card-header">Claim history</div><div className="table-responsive"><table className="table align-middle mb-0">
-          <thead><tr><th>Ticket</th><th>Submitted</th><th className="text-end">Amount</th><th>Status</th><th>UTR</th></tr></thead>
-          <tbody>{claims.length === 0 && <tr><td colSpan="5" className="text-center text-muted py-3">No claims</td></tr>}
-            {claims.map((c) => (<tr key={c.id}><td className="fw-semibold">{c.ticketRef}</td><td>{fmtDate(c.submittedAt)}</td><td className="text-end">{inr(c.total)}</td><td><StatusBadge s={c.status} /></td><td>{c.utr ? <code>{c.utr}</code> : '—'}</td></tr>))}</tbody>
-        </table></div></div></div>
       </div>
       <FreezeEmployeeModal
         employee={showFreezeModal ? u : null}

@@ -14,7 +14,7 @@ export const ago = (d) => {
 
 const STATUS = {
   DRAFT: 'secondary', SUBMITTED: 'info', UNDER_REVIEW: 'warning', INFO_REQUESTED: 'warning', APPROVED: 'success', REJECTED: 'danger', PAID: 'success',
-  Pending: 'warning', Verified: 'success', Rejected: 'danger', active: 'success', frozen: 'secondary',
+  Pending: 'warning', Verified: 'success', Rejected: 'danger', active: 'success', frozen: 'secondary', pending: 'warning', invited: 'info',
 };
 export const StatusBadge = ({ s }) => <span className={`badge rounded-pill text-bg-${STATUS[s] || 'secondary'}`}>{String(s).replace('_', ' ')}</span>;
 

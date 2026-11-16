@@ -9,7 +9,7 @@ import PasswordChangeForm from './PasswordChangeForm';
 const NAV = {
   employee: [['/employee/dashboard', 'My Claims', FiList], ['/employee/new-claim', 'New Claim', FiPlusCircle], ['/employee/profile', 'My Profile', FiUser]],
   finance: [['/finance/dashboard', 'Shared Queue', FiInbox], ['/finance/payments', 'Payments', FiCreditCard]],
-  hr: [['/hr/dashboard', 'Today', FiGrid], ['/hr/employees', 'Employees', FiUsers], ['/hr/employees/new', 'Add Employee', FiUserPlus], ['/hr/bank-verification', 'Bank Verification', FiShield]],
+  hr: [['/hr/dashboard', 'Today', FiGrid], ['/hr/employees', 'Employees', FiUsers], ['/hr/employees/new', 'Add Employee', FiUserPlus], ['/hr/finance', 'Add Finance', FiCreditCard], ['/hr/bank-verification', 'Bank Verification', FiShield]],
   admin: [['/admin/dashboard', 'Spend Analytics', FiBarChart2], ['/admin/audit', 'Audit Trail', FiClipboard]],
 };
 const SEARCH = { finance: ['/finance/dashboard', 'Search ticket (EXP-2026-0007) or employee…'], admin: ['/admin/dashboard', 'Search ticket or employee ID…'] };
