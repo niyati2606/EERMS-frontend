@@ -262,16 +262,20 @@ export default function AddFinance() {
                           <StatusBadge s={u.status} />
                         </td>
                         <td className="text-end">
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-purple"
-                            disabled={actionBusy === u.id}
-                            onClick={() => handleResend(u)}
-                            title="Resend password setup email"
-                          >
-                            <FiMail className="me-1" />
-                            {actionBusy === u.id ? 'Sending…' : 'Resend link'}
-                          </button>
+                          {u.status !== 'active' ? (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-purple"
+                              disabled={actionBusy === u.id}
+                              onClick={() => handleResend(u)}
+                              title="Resend password setup email"
+                            >
+                              <FiMail className="me-1" />
+                              {actionBusy === u.id ? 'Sending…' : 'Resend link'}
+                            </button>
+                          ) : (
+                            <span className="text-muted small">—</span>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -285,3 +289,4 @@ export default function AddFinance() {
     </>
   );
 }
+

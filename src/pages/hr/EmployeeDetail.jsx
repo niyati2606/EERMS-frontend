@@ -58,7 +58,7 @@ export default function EmployeeDetail() {
     <>
       <PageHeader title={u.fullName} sub={u.empCode}>
         <Link className="btn btn-light border" to="/hr/employees">← Back</Link>
-        <button className="btn btn-outline-purple" onClick={resendSetup}>Resend setup email</button>
+        {u.status !== 'active' && <button className="btn btn-outline-purple" onClick={resendSetup}>Resend setup email</button>}
         {!edit && <button className="btn btn-outline-purple" onClick={startEdit}>Edit</button>}
         {u.role !== 'admin' && <button className={`btn ${u.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'}`} onClick={() => u.status === 'active' ? setShowFreezeModal(true) : toggle(false)}>{u.status === 'active' ? 'Freeze account' : 'Reactivate'}</button>}
       </PageHeader>
