@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL || '/api' });
+const configuredApiUrl = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/+$/, '');
+const apiBaseUrl = configuredApiUrl
+  ? (/\/api$/i.test(configuredApiUrl) ? configuredApiUrl : `${configuredApiUrl}/api`)
+  : '/api';
+
+const api = axios.create({ baseURL: apiBaseUrl });
 api.interceptors.request.use((cfg) => {
   const t = localStorage.getItem('eerms2_token');
   if (t) cfg.headers.Authorization = `Bearer ${t}`;

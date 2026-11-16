@@ -10,10 +10,10 @@ Open http://localhost:5173
 ## Deploy to Vercel
 Deploy `eerms-frontend` as the Vercel project root. The Express API is a separate service; deploy `eerms-backend` to a Node.js host and configure:
 
-- `VITE_API_BASE_URL` in the Vercel project to the backend API URL, including `/api` (for example, `https://your-api-host.example/api`).
+- `VITE_API_BASE_URL` in the Vercel frontend project to the backend URL (for example, `https://your-api-host.example`). The frontend adds `/api` automatically; including `/api` in the value is also supported.
 - `CLIENT_ORIGIN` on the backend to the exact deployed frontend origin (for example, `https://your-app.vercel.app`).
 
-Set `VITE_API_BASE_URL` for each Vercel environment you use and redeploy after changing it. The frontend defaults to `/api` for local development, where Vite proxies requests to `http://localhost:5000`. The backend stores application data in a local JSON file, so use a host with persistent storage; a serverless filesystem is not suitable for this data store.
+Set `VITE_API_BASE_URL` in the Vercel frontend project's Environment Variables for the Production environment (and Preview if used), then redeploy. A `.env` file in the backend does not configure the frontend build. The frontend defaults to `/api` for local development, where Vite proxies requests to `http://localhost:5000`. The backend stores application data in a local JSON file, so use a host with persistent storage; a serverless filesystem is not suitable for this data store.
 
 ## SMTP email setup
 Copy `eerms-backend/.env.example` to `eerms-backend/.env`, then set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`. For Gmail, use `smtp.gmail.com`, port `587`, `SMTP_SECURE=false`, your Gmail address, and a Google App Password (not your regular Gmail password). Use that same Gmail address in `SMTP_FROM`. Employee onboarding fails with an explicit error if the setup email cannot be sent.
