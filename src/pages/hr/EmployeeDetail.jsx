@@ -101,7 +101,7 @@ export default function EmployeeDetail() {
         <div className="col-lg-6"><div className="card h-100"><div className="card-header d-flex justify-content-between">Employee details <StatusBadge s={u.status} /></div><div className="card-body">
           {!edit ? (
             <div className="row">
-              <div className="col-12 col-sm-6"><Row k="Employee code" v={u.empCode} /><Row k="Official email" v={u.email} /><Row k="Phone" v={u.phone} /><Row k="Role" v={u.role} /><Row k="Joining date" v={u.joiningDate} /></div>
+              <div className="col-12 col-sm-6"><Row k="Full name" v={u.fullName} /><Row k="Employee code" v={u.empCode} /><Row k="Official email" v={u.email} /><Row k="Phone" v={u.phone} /><Row k="Role" v={u.role} /><Row k="Joining date" v={u.joiningDate} /></div>
               <div className="col-12 col-sm-6"><Row k="Branch" v={u.branch} /></div>
             </div>
           ) : (
