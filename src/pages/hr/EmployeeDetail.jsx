@@ -6,6 +6,10 @@ import { PageHeader, StatusBadge, Alert, LoadingSkeleton } from '../../component
 import FreezeEmployeeModal from '../../components/FreezeEmployeeModal';
 
 const Row = ({ k, v }) => (<div className="mb-2"><div className="small text-uppercase text-muted">{k}</div><div className="fw-semibold">{v || '—'}</div></div>);
+const formatDate = (date) => {
+  const match = String(date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : date || '—';
+};
 
 export default function EmployeeDetail() {
   const { id } = useParams();
@@ -76,9 +80,9 @@ export default function EmployeeDetail() {
     } catch (e) { setErr(errMsg(e)); }
     finally { if (freeze) setFreezeBusy(false); }
   };
-  const startEdit = () => setEdit({ fullName: u.fullName, phone: u.phone, branch: u.branch, joiningDate: u.joiningDate || '' });
+  const startEdit = () => setEdit({ fullName: u.fullName, email: u.email, phone: u.phone, branch: u.branch, joiningDate: u.joiningDate || '' });
   const e = edit;
-  const inp = (k, label, type = 'text') => (<div className="col-md-6"><label className="form-label small fw-semibold">{label}</label><input type={type} className="form-control" value={e[k] || ''} onChange={(x) => setEdit({ ...e, [k]: x.target.value })} /></div>);
+  const inp = (k, label, type = 'text') => (<div className="col-md-6"><label className="form-label small fw-semibold">{label}</label><input type={type} className="form-control" required={k === 'email'} value={e[k] || ''} onChange={(x) => setEdit({ ...e, [k]: x.target.value })} /></div>);
 
   return (
     <>
@@ -101,13 +105,13 @@ export default function EmployeeDetail() {
         <div className="col-lg-6"><div className="card h-100"><div className="card-header d-flex justify-content-between">Employee details <StatusBadge s={u.status} /></div><div className="card-body">
           {!edit ? (
             <div className="row">
-              <div className="col-12 col-sm-6"><Row k="Full name" v={u.fullName} /><Row k="Employee code" v={u.empCode} /><Row k="Official email" v={u.email} /><Row k="Phone" v={u.phone} /><Row k="Role" v={u.role} /><Row k="Joining date" v={u.joiningDate} /></div>
+              <div className="col-12 col-sm-6"><Row k="Full name" v={u.fullName} /><Row k="Employee code" v={u.empCode} /><Row k="Official email" v={u.email} /><Row k="Phone" v={u.phone} /><Row k="Role" v={u.role} /><Row k="Joining date" v={formatDate(u.joiningDate)} /></div>
               <div className="col-12 col-sm-6"><Row k="Branch" v={u.branch} /></div>
             </div>
           ) : (
             <>
               <div className="row g-3">
-                {inp('fullName', 'Full name')}{inp('phone', 'Phone')}{inp('joiningDate', 'Joining date', 'date')}
+                {inp('fullName', 'Full name')}{inp('email', 'Official email', 'email')}{inp('phone', 'Phone')}{inp('joiningDate', 'Joining date', 'date')}
                 <div className="col-md-6"><label className="form-label small fw-semibold">Branch (office transfer)</label>
                   <select className="form-select" value={e.branch} onChange={(x) => setEdit({ ...e, branch: x.target.value })}>{meta?.branches.map((c) => <option key={c}>{c}</option>)}</select></div>
               </div>
