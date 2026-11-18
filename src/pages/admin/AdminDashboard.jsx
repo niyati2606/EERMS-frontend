@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import api, { errMsg } from '../../services/api';
-import { PageHeader, Hero, Stat, Alert, StatusBadge, inr, downloadText } from '../../components/ui';
+import { PageHeader, Hero, Stat, Alert, StatusBadge, LoadingSkeleton, inr, downloadText } from '../../components/ui';
 
 const compact = (v) => (v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`);
 
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const saveBudget = async () => { try { await api.put('/admin/budget', bud); setEdit(false); load(); } catch (e) { setErr(errMsg(e)); } };
   const exportCsv = () => api.get('/admin/export.csv', { responseType: 'text' }).then((r) => downloadText('eerms-claims.csv', r.data));
 
-  if (!a) return <div className="text-muted">Loading…</div>;
+  if (!a) return <LoadingSkeleton />;
   return (
     <>
       <Hero eyebrow="Spend briefing · this month" chips={[

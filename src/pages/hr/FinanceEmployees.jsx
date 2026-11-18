@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { FiCheck, FiChevronDown, FiCopy, FiMail, FiPlus, FiSearch, FiUsers } from 'react-icons/fi';
 import { errMsg } from '../../services/api';
 import { getFinanceStaff, resendSetupEmail } from '../../services/hrService';
-import { Alert, PageHeader, StatusBadge } from '../../components/ui';
+import { Alert, PageHeader, StatusBadge, LoadingSkeleton } from '../../components/ui';
 
 export default function FinanceEmployees() {
   const location = useLocation();
@@ -128,7 +128,7 @@ export default function FinanceEmployees() {
       )}
 
       {loading ? (
-        <div className="card text-center py-5 text-muted">Loading finance employees…</div>
+        <LoadingSkeleton variant="table" rows={5} />
       ) : error && employees.length === 0 ? (
         <div className="card text-center py-5">
           <div className="card-body">

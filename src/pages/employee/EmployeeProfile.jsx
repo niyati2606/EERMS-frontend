@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api, { errMsg } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Alert, PageHeader, StatusBadge } from '../../components/ui';
+import { Alert, PageHeader, StatusBadge, LoadingSkeleton } from '../../components/ui';
 
 export default function EmployeeProfile() {
   const { syncUser } = useAuth();
@@ -39,7 +39,7 @@ export default function EmployeeProfile() {
     }
   };
 
-  if (!profile && !error) return <div className="text-muted">Loading profile…</div>;
+  if (!profile && !error) return <LoadingSkeleton variant="detail" />;
 
   const employee = profile?.employee;
   const currentBank = profile?.bank;

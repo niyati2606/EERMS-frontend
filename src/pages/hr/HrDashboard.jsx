@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import EmployeeTable from '../../components/EmployeeTable';
-import { PageHeader, Hero, Stat, Alert } from '../../components/ui';
+import { PageHeader, Hero, Stat, Alert, LoadingSkeleton } from '../../components/ui';
 
 export default function HrDashboard() {
   const location = useLocation();
   const [notice, setNotice] = useState(location.state?.notice || '');
   const [s, setS] = useState(null);
   useEffect(() => { api.get('/hr/stats').then((r) => setS(r.data)); }, []);
-  if (!s) return <div className="text-muted">Loading…</div>;
+  if (!s) return <LoadingSkeleton />;
 
   return (
     <>

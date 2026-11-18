@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api, { errMsg } from '../../services/api';
-import { PageHeader, StatusBadge, Flags, Alert, FileViewer, CATS, inr, fmtDate, fmtDT, useClaimPaths } from '../../components/ui';
+import { PageHeader, StatusBadge, Flags, Alert, FileViewer, LoadingSkeleton, CATS, inr, fmtDate, fmtDT, useClaimPaths } from '../../components/ui';
 
 const STAGES = ['SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'PAID'];
 
@@ -13,7 +13,7 @@ export default function ClaimDetail() {
   const [open, setOpen] = useState(null);
   useEffect(() => { api.get(`/claims/${id}`).then((r) => setC(r.data)).catch((e) => setErr(errMsg(e))); }, [id]);
   if (err) return <Alert>{err}</Alert>;
-  if (!c) return <div className="text-muted">Loading…</div>;
+  if (!c) return <LoadingSkeleton variant="detail" />;
   const idx = STAGES.indexOf(c.status === 'INFO_REQUESTED' ? 'UNDER_REVIEW' : c.status);
 
   return (

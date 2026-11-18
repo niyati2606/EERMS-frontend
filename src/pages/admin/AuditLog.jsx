@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { PageHeader, fmtDT } from '../../components/ui';
+import { PageHeader, LoadingSkeleton, fmtDT } from '../../components/ui';
 
 export default function AuditLog() {
   const [q, setQ] = useState('');
@@ -21,11 +21,11 @@ export default function AuditLog() {
         <input type="date" className="form-control" style={{ maxWidth: 170 }} value={from} onChange={(e) => setFrom(e.target.value)} />
         <input type="date" className="form-control" style={{ maxWidth: 170 }} value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
-      <div className="card"><div className="table-responsive"><table className="table table-sm align-middle mb-0">
+      {!d ? <LoadingSkeleton variant="table" rows={6} /> : <div className="card"><div className="table-responsive"><table className="table table-sm align-middle mb-0">
         <thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Detail</th><th>IP</th><th>Hash</th></tr></thead>
         <tbody>{d?.entries.map((e) => (
           <tr key={e.seq}><td>{e.seq}</td><td>{fmtDT(e.at)}</td><td>{e.actor}</td><td><code>{e.action}</code></td><td>{e.entity}</td><td className="small">{e.detail}</td><td className="small">{e.ip}</td><td className="small text-muted"><code>{e.hash.slice(0, 10)}…</code></td></tr>))}</tbody>
-      </table></div></div>
+      </table></div></div>}
     </>
   );
 }

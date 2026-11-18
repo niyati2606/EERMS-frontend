@@ -37,6 +37,40 @@ export const PageHeader = ({ title, sub, children, actionsClassName = '' }) => (
   </div>
 );
 
+export function LoadingSkeleton({ variant = 'dashboard', rows = 5 }) {
+  const line = (className = '') => <span className={`skeleton-line ${className}`} aria-hidden="true" />;
+  return (
+    <div className={`loading-skeleton loading-skeleton-${variant}`} role="status" aria-label="Loading data">
+      {variant === 'dashboard' ? (
+        <>
+          <div className="skeleton-hero">{line('w-25')}{line('w-50')}</div>
+          <div className="skeleton-stats">{[1, 2, 3, 4].map((item) => <div className="card" key={item}>{line('w-50')}{line('w-75')}</div>)}</div>
+          <div className="card skeleton-content">{Array.from({ length: rows }, (_, index) => line(index % 2 ? 'w-75' : 'w-50'))}</div>
+        </>
+      ) : variant === 'detail' ? (
+        <>
+          <div className="skeleton-heading">{line('w-25')}{line('w-50')}</div>
+          <div className="skeleton-detail">{[1, 2].map((item) => <div className="card" key={item}>{Array.from({ length: 5 }, (_, index) => line(index % 2 ? 'w-75' : 'w-50'))}</div>)}</div>
+        </>
+      ) : variant === 'file' ? (
+        <div className="card skeleton-file">{line('w-25')}{line()}</div>
+      ) : variant === 'rows' ? (
+        <div className="card skeleton-content">{Array.from({ length: rows }, (_, index) => (
+          <div className="skeleton-row" key={index}>{line('w-25')}{line('w-50')}{line('w-25')}</div>
+        ))}</div>
+      ) : (
+        <>
+          <div className="skeleton-filters">{line('w-50')}{line('w-25')}{line('w-25')}</div>
+          <div className="card skeleton-content">{Array.from({ length: rows }, (_, index) => (
+            <div className="skeleton-row" key={index}>{line('w-25')}{line('w-50')}{line('w-25')}</div>
+          ))}</div>
+        </>
+      )}
+      <span className="visually-hidden">Loading…</span>
+    </div>
+  );
+}
+
 export const Alert = ({ type = 'danger', children, onClose }) =>
   children ? <div className={`alert alert-${type} d-flex justify-content-between`}><div>{children}</div>{onClose && <button className="btn-close" onClick={onClose} />}</div> : null;
 
@@ -59,7 +93,7 @@ export function useBlobUrl(path) {
 export function FileViewer({ path, zoom = 1, rotation = 0 }) {
   const { url, type, err } = useBlobUrl(path);
   if (err) return <div className="text-danger p-4">{err}</div>;
-  if (!url) return <div className="text-muted p-4">Loading…</div>;
+  if (!url) return <LoadingSkeleton variant="file" />;
   if (type === 'application/pdf') {
     return (
       <div style={{ overflow: 'auto', maxHeight: 560 }}>

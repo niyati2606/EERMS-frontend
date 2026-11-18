@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api, { errMsg } from '../../services/api';
 import { getHrMeta, resendSetupEmail } from '../../services/hrService';
-import { PageHeader, StatusBadge, Alert } from '../../components/ui';
+import { PageHeader, StatusBadge, Alert, LoadingSkeleton } from '../../components/ui';
 import FreezeEmployeeModal from '../../components/FreezeEmployeeModal';
 
 const Row = ({ k, v }) => (<div className="mb-2"><div className="small text-uppercase text-muted">{k}</div><div className="fw-semibold">{v || '—'}</div></div>);
@@ -25,7 +25,7 @@ export default function EmployeeDetail() {
   useEffect(() => { load(); getHrMeta().then(setMeta); }, [id]); // eslint-disable-line
 
   if (err && !u) return <Alert>{err}</Alert>;
-  if (!u) return <div className="text-muted">Loading…</div>;
+  if (!u) return <LoadingSkeleton variant="detail" />;
   const b = u.bank;
 
   const resendSetup = async () => {

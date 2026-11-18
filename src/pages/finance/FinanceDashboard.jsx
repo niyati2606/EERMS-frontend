@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { errMsg } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Hero, Avatar, Stat, Alert, inr, ago } from '../../components/ui';
+import { Hero, Avatar, Stat, Alert, LoadingSkeleton, inr, ago } from '../../components/ui';
 
 const pillClass = (code) => (['HIGH_VALUE', 'RECEIPT_DUPLICATE'].includes(code) ? 'bad' : 'warn');
 const employeeName = (claim) => claim.employee?.fullName || 'Employee record unavailable';
@@ -21,6 +21,7 @@ export default function FinanceDashboard() {
     api.get('/finance/stats').then((r) => setStats(r.data));
   };
   useEffect(() => { load(); const t = setInterval(load, 8000); return () => clearInterval(t); }, [q]); // eslint-disable-line
+  if (!rows || !stats) return <LoadingSkeleton />;
 
   const assign = async (c) => {
     setErr('');

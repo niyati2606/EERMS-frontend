@@ -13,7 +13,7 @@ Deploy `eerms-frontend` as the Vercel project root. The Express API is a separat
 - `VITE_API_BASE_URL` in the Vercel frontend project to the backend URL (for example, `https://your-api-host.example`). The frontend adds `/api` automatically; including `/api` in the value is also supported.
 - `CLIENT_ORIGIN` on the backend to the exact deployed frontend origin (for example, `https://your-app.vercel.app`).
 
-Set `VITE_API_BASE_URL` in the Vercel frontend project's Environment Variables for the Production environment (and Preview if used), then redeploy. A `.env` file in the backend does not configure the frontend build. The frontend defaults to `/api` for local development, where Vite proxies requests to `http://localhost:5000`. The backend stores application data in a local JSON file, so use a host with persistent storage; a serverless filesystem is not suitable for this data store.
+Set `VITE_API_BASE_URL` in the Vercel frontend project's Environment Variables for the Production environment (and Preview if used), then redeploy. A `.env` file in the backend does not configure the frontend build. The frontend defaults to `/api` for local development, where Vite proxies requests to `http://localhost:5000`. For local development, the backend stores application data in `eerms-backend/data/store.json`. This file is not suitable for serverless or ephemeral hosting. Set `DATABASE_URL` (or `POSTGRES_URL`) to a PostgreSQL database on Vercel or another provider. The backend automatically creates and uses the `eerms_store` table. JSON `/tmp` storage is only a temporary fallback and may reset on cold starts or redeployments.
 
 ## SMTP email setup
 Copy `eerms-backend/.env.example` to `eerms-backend/.env`, then set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`. For Gmail, use `smtp.gmail.com`, port `587`, `SMTP_SECURE=false`, your Gmail address, and a Google App Password (not your regular Gmail password). Use that same Gmail address in `SMTP_FROM`. Employee onboarding fails with an explicit error if the setup email cannot be sent.
@@ -38,6 +38,6 @@ Copy `eerms-backend/.env.example` to `eerms-backend/.env`, then set `SMTP_HOST`,
 - Admin: monthly budget + all-category tracker, branch/department/trend charts, SLA, universal search, hash-chained audit trail, CSV export
 
 ## Notes
-- Data is kept in memory and saved to `eerms-backend/data/store.json` every 2 s (delete that file to reset to demo data). `database/schema.sql` is the PostgreSQL target schema; the `pg` layer is not wired yet.
+- Data is kept in memory and persisted every 2 s. Locally it is saved to `eerms-backend/data/store.json`; on Vercel it requires `DATABASE_URL`/`POSTGRES_URL` and is saved to PostgreSQL. Delete the local JSON file to reset local demo data.
 - Fresh data stores include bootstrap admin, HR, and finance logins only; employees, banks, and claims are created through the app.
 - PDF/Excel export, SSO, TLS/AES-at-rest and transactional emails other than the employee password setup email are not implemented (Phase 2 / infrastructure).

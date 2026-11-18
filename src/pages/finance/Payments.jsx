@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api, { errMsg } from '../../services/api';
-import { PageHeader, StatusBadge, Alert, inr, fmtDate, downloadText } from '../../components/ui';
+import { PageHeader, StatusBadge, Alert, LoadingSkeleton, inr, fmtDate, downloadText } from '../../components/ui';
 
 export default function Payments() {
   const [tab, setTab] = useState('payable');
@@ -9,8 +9,12 @@ export default function Payments() {
   const [utr, setUtr] = useState({});
   const [msg, setMsg] = useState(null);
   const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const load = () => api.get(`/finance/${tab}`).then((r) => setRows(r.data));
+  const load = () => {
+    setLoading(true);
+    return api.get(`/finance/${tab}`).then((r) => setRows(r.data)).catch((e) => setErr(errMsg(e))).finally(() => setLoading(false));
+  };
   useEffect(() => { load(); setSel({}); }, [tab]); // eslint-disable-line
 
   const exportBatch = async () => {
@@ -39,7 +43,7 @@ export default function Payments() {
       </ul>
       <Alert onClose={() => setErr('')}>{err}</Alert>
       <Alert type="success" onClose={() => setMsg(null)}>{msg}</Alert>
-      <div className="card"><div className="table-responsive"><table className="table align-middle mb-0">
+      {loading ? <LoadingSkeleton variant="rows" rows={5} /> : <div className="card"><div className="table-responsive"><table className="table align-middle mb-0">
         <thead><tr>{tab === 'payable' && <th />}<th>Ticket</th><th>Employee</th><th>Bank</th><th className="text-end">Amount</th>{tab === 'payable' ? <th>Bank UTR</th> : <><th>Paid</th><th>UTR</th></>}</tr></thead>
         <tbody>
           {rows.length === 0 && <tr><td colSpan="7" className="text-center text-muted py-4">Nothing here</td></tr>}
@@ -56,7 +60,7 @@ export default function Payments() {
                   <button className="btn btn-purple" onClick={() => pay(c)}>Mark PAID</button></div></td>
               ) : (<><td>{fmtDate(c.paidAt)}</td><td><code>{c.utr}</code></td></>)}
             </tr>))}
-        </tbody></table></div></div>
+        </tbody></table>        </div></div>}
     </>
   );
 }

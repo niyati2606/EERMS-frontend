@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { errMsg } from '../../services/api';
-import { PageHeader, StatusBadge, Alert } from '../../components/ui';
+import { PageHeader, StatusBadge, Alert, LoadingSkeleton } from '../../components/ui';
 
 const CHECKLIST_ITEMS = [
   'Account holder name matches',
@@ -69,7 +69,7 @@ export default function BankVerification() {
         <li key={k} className="nav-item"><button className="nav-link" style={filter === k ? { background: '#6d4ae0', color: '#fff' } : { color: '#6d4ae0' }} onClick={() => setFilter(k)}>{k || 'All'}</button></li>))}</ul>
       <Alert onClose={() => setErr('')}>{err}</Alert>
       {loading ? (
-        <div className="card"><div className="card-body text-center text-muted py-5">Loading bank verifications…</div></div>
+        <LoadingSkeleton variant="rows" rows={5} />
       ) : rows.length === 0 && err ? (
         <div className="card"><div className="card-body text-center py-5">
           <h2 className="h6 fw-bold mb-1">Could not load bank verifications</h2>

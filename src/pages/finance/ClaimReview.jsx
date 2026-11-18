@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiRotateCw } from 'react-icons/fi';
 import api, { errMsg } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { PageHeader, StatusBadge, Flags, Alert, FileViewer, CATS, inr, fmtDate } from '../../components/ui';
+import { PageHeader, StatusBadge, Flags, Alert, FileViewer, LoadingSkeleton, CATS, inr, fmtDate } from '../../components/ui';
 
 export default function ClaimReview() {
   const { id } = useParams();
@@ -32,7 +32,7 @@ export default function ClaimReview() {
   }, [mine, c]);
 
   if (err && !c) return <Alert>{err}</Alert>;
-  if (!c) return <div className="text-muted">Loading…</div>;
+  if (!c) return <LoadingSkeleton variant="detail" />;
 
   const act = async (fn) => { setErr(''); try { await fn(); } catch (e) { setErr(errMsg(e)); } };
   const assign = () => act(async () => setC((await api.post(`/finance/claims/${id}/assign`)).data));

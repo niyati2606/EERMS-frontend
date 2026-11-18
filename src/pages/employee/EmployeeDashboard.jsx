@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { PageHeader, StatusBadge, Stat, Hero, inr, fmtDate, useClaimPaths } from '../../components/ui';
+import { PageHeader, StatusBadge, Stat, Hero, LoadingSkeleton, inr, fmtDate, useClaimPaths } from '../../components/ui';
 
 export default function EmployeeDashboard() {
   const [claims, setClaims] = useState(null);
   const p = useClaimPaths();
   const load = () => api.get('/claims').then((r) => setClaims(r.data));
   useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, []);
-  if (!claims) return <div className="text-muted">Loading…</div>;
+  if (!claims) return <LoadingSkeleton />;
   const sum = (f) => claims.filter(f).reduce((s, c) => s + c.total, 0);
   const revision = claims.filter((c) => c.status === 'INFO_REQUESTED');
 

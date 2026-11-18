@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiChevronDown, FiMoreVertical, FiCheckCircle, FiClock, FiXCircle, FiLock, FiUser, FiUsers, FiUserPlus } from 'react-icons/fi';
 import api, { errMsg } from '../services/api';
-import { Alert } from './ui';
+import { Alert, LoadingSkeleton } from './ui';
 import FreezeEmployeeModal from './FreezeEmployeeModal';
 
 const BRANCHES = ['Corporate HQ', 'Branch A', 'Branch B'];
@@ -27,6 +27,7 @@ export default function EmployeeTable() {
   const [status, setStatus] = useState('');
   const [sort, setSort] = useState({ key: 'empCode', dir: 'desc' });
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [menu, setMenu] = useState(null);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
@@ -35,7 +36,14 @@ export default function EmployeeTable() {
   const box = useRef(null);
 
   useEffect(() => { setQ(sp.get('q') || ''); }, [sp]);
-  const load = () => api.get('/hr/employees', { params: { q, status: status || undefined } }).then((r) => setRows(r.data));
+  const load = () => {
+    setLoading(true);
+    setErr('');
+    return api.get('/hr/employees', { params: { q, status: status || undefined } })
+      .then((r) => setRows(r.data))
+      .catch((e) => setErr(errMsg(e)))
+      .finally(() => setLoading(false));
+  };
   useEffect(() => { load(); }, [q, status]); // eslint-disable-line
   useEffect(() => {
     const close = (e) => { if (box.current && !box.current.contains(e.target)) setMenu(null); };
@@ -84,7 +92,9 @@ export default function EmployeeTable() {
           </div>))}
       </div>
 
-      {list.length === 0 ? (
+      {loading ? <LoadingSkeleton variant="rows" rows={5} /> : err && rows.length === 0 ? (
+        <div className="card emp-empty"><h2>Could not load employees</h2><p>Please try again.</p></div>
+      ) : list.length === 0 ? (
         <div className="card emp-empty">
           <div className="emp-empty-icon">{hasFilters ? <FiSearch /> : <FiUsers />}</div>
           <h2>{hasFilters ? 'No matching employees' : 'No employees yet'}</h2>
