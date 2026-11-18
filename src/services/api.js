@@ -14,10 +14,26 @@ api.interceptors.request.use((cfg) => {
 api.interceptors.response.use(
   (r) => r,
   (e) => {
-    if (e.response?.status === 401 && !e.config.url.includes('/auth/login')) {
+    const url = e.config?.url || '';
+    const isAuthRoute =
+      url.includes('/auth/login') ||
+      url.includes('/auth/setup-password') ||
+      url.includes('/auth/reset-password') ||
+      url.includes('/auth/request-password-reset');
+
+    const hadToken = Boolean(localStorage.getItem('eerms2_token'));
+    const isPublicPage = ['/login', '/set-password', '/reset-password', '/forgot-password'].some(
+      (path) => window.location.pathname.startsWith(path)
+    );
+
+    if (e.response?.status === 401 && !isAuthRoute) {
       ['token', 'user', 'exp'].forEach((k) => localStorage.removeItem('eerms2_' + k));
-      localStorage.setItem('eerms2_notice', 'Your session ended. Please sign in again.');
-      window.location.href = '/login';
+      if (hadToken && !isPublicPage) {
+        localStorage.setItem('eerms2_notice', 'Your session ended. Please sign in again.');
+      }
+      if (!isPublicPage) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(e);
   }

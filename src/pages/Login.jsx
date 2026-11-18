@@ -12,7 +12,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [err, setErr] = useState('');
-  const [notice] = useState(takeNotice);
+  const isPasswordJustSet = Boolean(location.state?.passwordSetupComplete || location.state?.passwordResetComplete);
+  const [notice] = useState(() => {
+    if (isPasswordJustSet) {
+      localStorage.removeItem('eerms2_notice');
+      return '';
+    }
+    return takeNotice();
+  });
   const [busy, setBusy] = useState(false);
 
   const submit = async (e) => {
@@ -77,7 +84,7 @@ export default function Login() {
               <p>Enter your work email and password to continue.</p>
             </div>
 
-            <Alert type="warning">{notice}</Alert>
+            {!isPasswordJustSet && <Alert type="warning">{notice}</Alert>}
             {location.state?.passwordSetupComplete && <Alert type="success">Password set successfully. You can now sign in.</Alert>}
             {location.state?.passwordResetComplete && <Alert type="success">Password reset successfully. You can now sign in.</Alert>}
             <Alert>{err}</Alert>

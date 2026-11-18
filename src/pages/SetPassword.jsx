@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { errMsg } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Alert } from '../components/ui';
 
 export default function SetPassword({ isReset = false }) {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { logout } = useAuth() || {};
   const token = params.get('token') || '';
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -14,6 +16,12 @@ export default function SetPassword({ isReset = false }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const passwordsMatch = Boolean(confirmPassword) && password === confirmPassword;
+
+  // Clear any existing session (e.g. from an HR admin or previous session) so setup is clean
+  useEffect(() => {
+    ['token', 'user', 'exp', 'notice'].forEach((k) => localStorage.removeItem('eerms2_' + k));
+    if (logout) logout();
+  }, [logout]);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -30,6 +38,8 @@ export default function SetPassword({ isReset = false }) {
     setBusy(true);
     try {
       await api.post(isReset ? '/auth/reset-password' : '/auth/setup-password', { token, newPassword: password });
+      ['token', 'user', 'exp', 'notice'].forEach((k) => localStorage.removeItem('eerms2_' + k));
+      if (logout) logout();
       navigate('/login', { replace: true, state: isReset ? { passwordResetComplete: true } : { passwordSetupComplete: true } });
     } catch (e) {
       setError(errMsg(e));
