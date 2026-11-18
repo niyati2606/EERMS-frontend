@@ -1,15 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiGrid, FiPlusCircle, FiList, FiInbox, FiCreditCard, FiUsers, FiUserPlus, FiShield, FiBarChart2, FiClipboard, FiBell, FiLogOut, FiSearch, FiUser } from 'react-icons/fi';
+import { FiGrid, FiPlusCircle, FiList, FiInbox, FiCreditCard, FiUsers, FiUserPlus, FiShield, FiBarChart2, FiClipboard, FiBell, FiLogOut, FiSearch, FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { fmtDT, Avatar } from './ui';
 import PasswordChangeForm from './PasswordChangeForm';
 
 const NAV = {
-  employee: [['/employee/dashboard', 'My Claims', FiList], ['/employee/new-claim', 'New Claim', FiPlusCircle], ['/employee/profile', 'My Profile', FiUser]],
+  employee: [['/employee/dashboard', 'My Claims', FiList],
+  //  ['/employee/new-claim', 'New Claim', FiPlusCircle],
+    ['/employee/profile', 'My Profile', FiUser]],
   finance: [['/finance/dashboard', 'Shared Queue', FiInbox], ['/finance/payments', 'Payments', FiCreditCard]],
-  hr: [['/hr/dashboard', 'Today', FiGrid], ['/hr/employees', 'Employees', FiUsers], ['/hr/employees/new', 'Add Employee', FiUserPlus], ['/hr/finance', 'Add Finance', FiCreditCard], ['/hr/bank-verification', 'Bank Verification', FiShield]],
+  hr: [['/hr/dashboard', 'Today', FiGrid], ['/hr/employees', 'Employees', FiUsers],
+  //  ['/hr/employees/new', 'Add Employee', FiUserPlus], 
+  ['/hr/finance/employees', 'Finance Employees', FiUsers],
+  // ['/hr/finance', 'Add Finance Employees', FiCreditCard],
+  ['/hr/bank-verification', 'Bank Verification', FiShield]],
   admin: [['/admin/dashboard', 'Spend Analytics', FiBarChart2], ['/admin/audit', 'Audit Trail', FiClipboard]],
 };
 const SEARCH = { finance: ['/finance/dashboard', 'Search ticket (EXP-2026-0007) or employee…'], admin: ['/admin/dashboard', 'Search ticket or employee ID…'] };
@@ -20,6 +26,7 @@ export default function Layout() {
   const nav = useNavigate();
   const [n, setN] = useState({ unread: 0, items: [] });
   const [open, setOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [q, setQ] = useState('');
   const [passwordPrompt, setPasswordPrompt] = useState(user.role === 'employee' && user.mustChange);
@@ -34,45 +41,80 @@ export default function Layout() {
       setN(r.data);
       if (r.data.unread > last.current && r.data.items[0]) { setToast(r.data.items[0]); setTimeout(() => setToast(null), 6000); }
       last.current = r.data.unread;
-    }).catch(() => {});
+    }).catch(() => { });
     poll();
     const t = setInterval(poll, 10000);
     return () => { live = false; clearInterval(t); };
   }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle('mobile-nav-open', mobileNavOpen);
+    return () => document.body.classList.remove('mobile-nav-open');
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return undefined;
+    const closeOnResize = () => setMobileNavOpen(false);
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setMobileNavOpen(false);
+    };
+    window.addEventListener('resize', closeOnResize);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.removeEventListener('resize', closeOnResize);
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [mobileNavOpen]);
 
   const markRead = () => api.post('/notifications/read').then(() => { setN((x) => ({ ...x, unread: 0 })); last.current = 0; });
   const search = SEARCH[user.role];
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      {mobileNavOpen && <button className="sidebar-backdrop" type="button" aria-label="Close navigation menu" onClick={() => setMobileNavOpen(false)} />}
+      <aside className={`sidebar${mobileNavOpen ? ' is-open' : ''}`} id="app-navigation" aria-label="Main navigation">
         <div className="ws-card"><div className="ws-logo">E</div><div><div className="ws-name">EERMS</div><div className="ws-sub">ABC Solutions</div></div></div>
+        {/* <div className="sidebar-intro">
+          <div className="date-label">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          <h1 className="sidebar-greeting">{hello}, {user.fullName.split(' ')[0]}</h1>
+        </div> */}
         <div className="nav-label">WORKSPACE</div>
         <nav className="nav flex-column">
           {NAV[user.role].map(([to, label, Icon]) => (
-            <NavLink key={to} to={to} end className="nav-link side-link"><Icon className="me-2" />{label}</NavLink>
+            <NavLink key={to} to={to} end className="nav-link side-link" onClick={() => setMobileNavOpen(false)}><Icon className="me-2" />{label}</NavLink>
           ))}
         </nav>
         <div className="mt-auto">
           <div className="agent-card">● Secure account</div>
           <div className="user-chip"><Avatar name={user.fullName} lg />
             <div style={{ minWidth: 0 }}><div className="fw-semibold text-truncate">{user.fullName}</div><div className="small" style={{ opacity: .65 }}>{ROLE[user.role]}</div></div></div>
+          <button className="nav-link side-link sidebar-logout" type="button" onClick={() => { setMobileNavOpen(false); logout(); nav('/login'); }}>
+            <FiLogOut className="me-2" />Sign out
+          </button>
         </div>
       </aside>
       <div className="main">
-        <header className="topbar">
-          <div>
-            <div className="date-label">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-            <h1 className="greeting">{hello}, {user.fullName.split(' ')[0]}</h1>
-          </div>
-          <div className="d-flex align-items-center gap-2 position-relative flex-wrap">
-            {search && (
-              <form className="search-pill" onSubmit={(e) => { e.preventDefault(); nav(`${search[0]}?q=${encodeURIComponent(q)}`); }}>
-                <FiSearch className="text-muted" /><input placeholder={search[1]} value={q} onChange={(e) => setQ(e.target.value)} /></form>)}
+        <header className={`topbar${search ? ' has-search' : ''}`}>
+          <button
+            className="mobile-nav-toggle"
+            type="button"
+            aria-label={mobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-controls="app-navigation"
+            aria-expanded={mobileNavOpen}
+            onClick={() => setMobileNavOpen((isOpen) => !isOpen)}
+          >
+            {mobileNavOpen ? <FiX /> : <FiMenu />}
+          </button>
+          <h1 className="topbar-tagline">Business travel, streamlined</h1>
+          {search && (
+            <form className="search-pill topbar-search" onSubmit={(e) => { e.preventDefault(); nav(`${search[0]}?q=${encodeURIComponent(q)}`); }}>
+              <FiSearch className="text-muted" /><input placeholder={search[1]} value={q} onChange={(e) => setQ(e.target.value)} />
+            </form>
+          )}
+          <div className="topbar-notifications position-relative">
             <button className="bell-btn" onClick={() => { setOpen(!open); if (!open && n.unread) markRead(); }} aria-label="Notifications">
               <FiBell />{n.unread > 0 && <span className="badge text-bg-danger position-absolute top-0 start-100 translate-middle rounded-pill" style={{ background: '#e5484d !important', color: '#fff' }}>{n.unread}</span>}
             </button>
-            <button className="bell-btn" title="Sign out" onClick={() => { logout(); nav('/login'); }}><FiLogOut /></button>
             {open && (
               <div className="card shadow notif-panel"><div className="card-header">Notifications</div>
                 <div className="list-group list-group-flush">

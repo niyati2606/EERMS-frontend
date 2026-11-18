@@ -28,12 +28,12 @@ Copy `eerms-backend/.env.example` to `eerms-backend/.env`, then set `SMTP_HOST`,
 ## Implemented (per BRD v2.0)
 - 4 roles, JWT + RBAC, no manager approval: claims go straight to the Finance Shared Queue (oldest first)
 - Multi-line claim form, 6 categories, Ola/Uber/Rapido + Booking ID for road, mandatory receipt per line (PDF/JPG/PNG < 200 KB)
-- SHA-256 duplicate receipt block + Emp+Date+Amount+Category duplicate flag
-- [Assign to Me] 15-minute lease lock, release, no self-audit (BRULE-05), split-screen zoomable receipt audit, Approve / Request Info / Reject (note mandatory)
+- SHA-256 duplicate receipt alert + 12-month Emp+Date+Amount+Category duplicate warning
+- [Assign to Me] one-hour lease lock, remark-required release, no self-audit (BRULE-05), split-screen receipt audit with zoom and 90° rotation, Approve / Request Info / Reject (note mandatory)
 - Employee revision worklist + resubmit, timeline, notifications (bell + toast; employee password setup links are delivered by SMTP)
 - HR-created employees receive a one-time, 24-hour password setup link by SMTP email; employees set their own password and can update personal and bank details from My Profile
 - EFT/CSV batch export (verified bank + active employee only), UTR entry to mark PAID
-- Flags: > ₹25,000, 72h aging, meals/hotel caps, 45-day grace
+- Flags: > ₹25,000, 72 business-hour aging (Mon–Fri, 9:00–17:00 IST) with in-app digests to active Finance users, meals/hotel caps, 45-day grace, GST breakdown, and ₹50/km road policy check
 - HR: employee list/freeze, 3-step Add Employee wizard, Bank Verification page
 - Admin: monthly budget + all-category tracker, branch/department/trend charts, SLA, universal search, hash-chained audit trail, CSV export
 

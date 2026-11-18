@@ -24,8 +24,13 @@ export default function HrDashboard() {
         <div className="col-6 col-lg-3"><Stat label="Bank verification pending" value={s.pendingBank} tone="coral" sub={<Link to="/hr/bank-verification">Review queue →</Link>} /></div>
       </div>
 
-      <PageHeader title="Employees" sub="Search, filter and manage employee records.">
-        <Link className="btn btn-purple rounded-pill px-4" to="/hr/employees/new">+ Add employee</Link>
+      <PageHeader title="Employees" sub="Search, filter and manage employee records." actionsClassName="hr-dashboard-header-actions">
+        {/* <Link className="btn btn-purple rounded-pill px-4" to="/hr/employees/new" style={{ textDecoration: 'none', textsize: '1.1rem', alignItems: 'center', display: 'flex', aignself: 'en' }}>
+          Add employee
+        </Link> */}
+        <Link className="btn btn-purple rounded-pill px-4" to="/hr/employees/new">
+          Add employee
+        </Link>
       </PageHeader>
       <EmployeeTable />
     </>

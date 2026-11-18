@@ -12,7 +12,7 @@ export default function AddEmployee() {
   const [step, setStep] = useState(0);
   const [code, setCode] = useState('…');
   const [f, setF] = useState({
-    fullName: '', email: '', phoneNumber: '', joiningDate: '', branchLocation: '',
+    fullName: '', email: '', phoneNumber: '', branchLocation: '', joiningDate: '',
     accountHolderName: '', bankName: '', accountNumber: '', ifscCode: '',
   });
   const [errs, setErrs] = useState({});
@@ -29,7 +29,7 @@ export default function AddEmployee() {
     const e = {};
     const req = (k, label) => { if (!String(f[k]).trim()) e[k] = `${label} is required`; };
     if (s === 0) {
-      req('fullName', 'Full name'); req('email', 'Official email'); req('phoneNumber', 'Phone'); req('joiningDate', 'Date of joining'); req('branchLocation', 'Branch location');
+      req('fullName', 'Full name'); req('email', 'Official email'); req('phoneNumber', 'Phone'); req('branchLocation', 'Branch location'); req('joiningDate', 'Joining date');
       if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Enter a valid email address';
     }
     if (s === 1) {
@@ -71,9 +71,9 @@ export default function AddEmployee() {
         <div className="display-4 text-success"><FiCheck /></div>
         <h2 className="h4 fw-bold">Employee created</h2>
         <p className="mb-1"><strong>{done.employee.fullName}</strong> · {done.employee.empCode}</p>
-        <p className="text-warning">Bank details are pending. The employee can upload a cancelled cheque from My Profile for verification.</p>
+        <p className="text-warning">Bank details are pending HR verification.</p>
         <div className="alert alert-info text-start">
-          A one-time password setup link was sent to <code>{done.employee.email}</code>. The link expires after 24 hours.
+          A one-time password setup link was sent to <code>{done.employee.email}</code>. The link expires after 30 minutes.
         </div>
         <div className="d-flex gap-2 justify-content-center"><Link to="/hr/employees" className="btn btn-purple">Employee list</Link>
           <button className="btn btn-outline-purple" onClick={() => window.location.reload()}>Add another</button></div>
@@ -94,28 +94,34 @@ export default function AddEmployee() {
         <Alert onClose={() => setApiErr('')}>{apiErr}</Alert>
 
         {step === 0 && (
-          <div className="row g-3">
-            <div className="col-md-6"><label className="form-label fw-semibold">Employee code</label>
-              <input className="form-control" value={code} readOnly /><div className="form-text">Auto-generated</div></div>
-            {fld('fullName', 'Full name')}
-            {fld('email', 'Official email', { input: { type: 'email' } })}
-            {fld('phoneNumber', 'Phone', { input: { type: 'tel' } })}
-            {fld('joiningDate', 'Date of joining', { input: { type: 'date' } })}
-            <div className="col-md-6"><label className="form-label fw-semibold">Branch location <span className="text-danger">*</span></label>
-              <select className={`form-select ${errs.branchLocation ? 'is-invalid' : ''}`} value={f.branchLocation} onChange={(e) => set('branchLocation', e.target.value)}>
-                <option value="">Select branch</option>{BRANCHES.map((b) => <option key={b}>{b}</option>)}</select>
-              {errs.branchLocation && <div className="invalid-feedback">{errs.branchLocation}</div>}</div>
-          </div>)}
+          <>
+            <div className="mb-3">
+              <h2 className="h6 fw-bold mb-1">Profile</h2>
+              <p className="small text-muted mb-0">Basic employee details.</p>
+            </div>
+            <div className="row g-3">
+              <div className="col-md-6"><label className="form-label fw-semibold">Employee code</label>
+                <input className="form-control" value={code} readOnly /><div className="form-text">Auto-generated</div></div>
+              {fld('fullName', 'Full name', { input: { placeholder: 'Priya Sharma' } })}
+              {fld('email', 'Official email', { input: { type: 'email', placeholder: 'name@company.com' } })}
+              {fld('phoneNumber', 'Phone', { input: { type: 'tel', placeholder: '98765 43210', maxLength: 10 } })}
+              <div className="col-md-6"><label className="form-label fw-semibold">Branch location <span className="text-danger">*</span></label>
+                <select className={`form-select ${errs.branchLocation ? 'is-invalid' : ''}`} value={f.branchLocation} onChange={(e) => set('branchLocation', e.target.value)}>
+                  <option value="">Select branch</option>{BRANCHES.map((b) => <option key={b}>{b}</option>)}</select>
+                {errs.branchLocation && <div className="invalid-feedback">{errs.branchLocation}</div>}</div>
+              {fld('joiningDate', 'Joining date', { input: { type: 'date' } })}
+            </div>
+          </>)}
 
         {step === 1 && (
           <>
             <h2 className="h5 fw-bold mb-0">Payout bank details</h2>
-            <p className="text-muted">Bank details are saved as pending until the employee uploads a cancelled cheque from My Profile.</p>
+            <p className="text-muted">Bank details are saved as pending until HR verifies them.</p>
             <div className="row g-3 mb-3">
-              {fld('accountHolderName', 'Account holder name')}
-              {fld('bankName', 'Bank name')}
-              {fld('accountNumber', 'Account number', { input: { inputMode: 'numeric', maxLength: 18, onChange: (e) => set('accountNumber', e.target.value.replace(/\D/g, '')) } })}
-              {fld('ifscCode', 'IFSC code', { input: { maxLength: 11, style: { textTransform: 'uppercase' } } })}
+              {fld('accountHolderName', 'Account holder name', { input: { placeholder: 'Name as shown on bank passbook' } })}
+              {fld('bankName', 'Bank name', { input: { placeholder: 'State Bank of India' } })}
+              {fld('accountNumber', 'Account number', { input: { inputMode: 'numeric', maxLength: 18, placeholder: '9–18 digit account number', onChange: (e) => set('accountNumber', e.target.value.replace(/\D/g, '')) } })}
+              {fld('ifscCode', 'IFSC code', { input: { maxLength: 11, placeholder: 'SBIN0001234', style: { textTransform: 'uppercase' } } })}
             </div>
           </>)}
 
@@ -125,18 +131,20 @@ export default function AddEmployee() {
             <p className="text-muted">Check the details below. A one-time password setup link will be sent to the employee’s email address.</p>
             <div className="review-grid">
               {[
-                ['Employee code', code], ['Full name', f.fullName], ['Official email', f.email], ['Phone', f.phoneNumber], ['Date of joining', f.joiningDate],
-                ['Branch', f.branchLocation],
+                ['Employee code', code], ['Full name', f.fullName], ['Official email', f.email], ['Phone', f.phoneNumber],
+                ['Branch', f.branchLocation], ['Joining date', f.joiningDate],
                 ['Bank', `${f.bankName} · ${f.ifscCode.toUpperCase()}`], ['Account', `••••••${f.accountNumber.slice(-4)}`],
               ].map(([k, v]) => (<div key={k}><div className="k">{k}</div><div className="v">{v || '—'}</div></div>))}
             </div>
           </>)}
 
         <div className="d-flex justify-content-between mt-4">
-          <button type="button" className="btn btn-outline-secondary" onClick={back} disabled={step === 0 || busy}>Back</button>
+          {step === 0
+            ? <Link to="/hr/employees" className="btn btn-light rounded-pill px-4">Cancel</Link>
+            : <button type="button" className="btn btn-outline-secondary" onClick={back} disabled={busy}>Back</button>}
           {step < STEPS.length - 1
-            ? <button type="button" className="btn btn-purple px-4" onClick={next} disabled={busy}>Next</button>
-            : <button className="btn btn-purple px-4" onClick={submit} disabled={busy}><FiCheck className="me-1" />{busy ? 'Creating…' : 'Create employee'}</button>}
+            ? <button type="button" className="btn btn-purple rounded-pill px-4" onClick={next} disabled={busy}>Next</button>
+            : <button className="btn btn-purple rounded-pill px-4" onClick={submit} disabled={busy}><FiCheck className="me-1" />{busy ? 'Creating…' : 'Create employee'}</button>}
         </div>
       </div>
     </>

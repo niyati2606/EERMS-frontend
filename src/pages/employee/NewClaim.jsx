@@ -5,7 +5,7 @@ import api, { errMsg, errList } from '../../services/api';
 import { PageHeader, Alert, CATS, inr, useClaimPaths } from '../../components/ui';
 
 const MAX = 200 * 1024;
-const blank = () => ({ key: Math.random().toString(36).slice(2), id: null, date: '', category: 'MEALS', amount: '', reason: '', provider: '', bookingId: '', file: null, existing: null });
+const blank = () => ({ key: Math.random().toString(36).slice(2), id: null, date: '', category: 'MEALS', amount: '', reason: '', provider: '', bookingId: '', distanceKm: '', file: null, existing: null });
 
 export default function NewClaim() {
   const { id } = useParams();
@@ -16,14 +16,19 @@ export default function NewClaim() {
   const [err, setErr] = useState('');
   const [errors, setErrors] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [policy, setPolicy] = useState(null);
   const today = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    api.get('/claims/policy').then(({ data }) => setPolicy(data)).catch((e) => setErr(errMsg(e)));
+  }, []);
 
   useEffect(() => {
     if (!id) return;
     api.get(`/claims/${id}`).then(({ data }) => {
       setTitle(data.title);
       if (data.decisionNote && data.status === 'INFO_REQUESTED') setErr(`Finance feedback: ${data.decisionNote}`);
-      setLines(data.lines.map((l) => ({ ...blank(), id: l.id, date: l.date, category: l.category, amount: l.amount, reason: l.reason, provider: l.provider || '', bookingId: l.bookingId || '', existing: l.receipt })));
+      setLines(data.lines.map((l) => ({ ...blank(), id: l.id, date: l.date, category: l.category, amount: l.amount, reason: l.reason, provider: l.provider || '', bookingId: l.bookingId || '', distanceKm: l.distanceKm || '', existing: l.receipt })));
     }).catch((e) => setErr(errMsg(e)));
   }, [id]);
 
@@ -40,7 +45,7 @@ export default function NewClaim() {
     const fd = new FormData();
     fd.append('payload', JSON.stringify({
       title: title || 'Expense claim', submit,
-      lines: lines.map((l) => ({ id: l.id, date: l.date, category: l.category, amount: Number(l.amount), reason: l.reason, provider: l.provider, bookingId: l.bookingId })),
+      lines: lines.map((l) => ({ id: l.id, date: l.date, category: l.category, amount: Number(l.amount), reason: l.reason, provider: l.provider, bookingId: l.bookingId, distanceKm: l.distanceKm })),
     }));
     lines.forEach((l, i) => l.file && fd.append(`receipt_${i}`, l.file));
     try {
@@ -74,13 +79,16 @@ export default function NewClaim() {
             <div className="col-md-4"><label className="form-label small fw-semibold">Amount (₹)</label>
               <input type="number" min="1" step="0.01" className="form-control" value={l.amount} onChange={(e) => set(i, { amount: e.target.value })} /></div>
             {l.category === 'ROAD' && (<>
-              <div className="col-md-4"><label className="form-label small fw-semibold">Ride provider</label>
+              <div className="col-md-3"><label className="form-label small fw-semibold">Ride provider</label>
                 <select className="form-select" value={l.provider} onChange={(e) => set(i, { provider: e.target.value })}>
                   <option value="">Select…</option><option>Ola</option><option>Uber</option><option>Rapido</option></select></div>
-              <div className="col-md-4"><label className="form-label small fw-semibold">Trip / Booking ID</label>
+              <div className="col-md-3"><label className="form-label small fw-semibold">Trip / Booking ID</label>
                 <input className="form-control" value={l.bookingId} onChange={(e) => set(i, { bookingId: e.target.value })} /></div>
+              <div className="col-md-3"><label className="form-label small fw-semibold">Distance (km) *</label>
+                <input type="number" min="0.1" step="0.1" className="form-control" value={l.distanceKm} onChange={(e) => set(i, { distanceKm: e.target.value })} />
+                <div className="form-text">{policy ? `Policy rate: ₹${policy.mileagePerKm}/km` : 'Loading mileage policy…'}</div></div>
             </>)}
-            <div className={l.category === 'ROAD' ? 'col-md-4' : 'col-md-6'}><label className="form-label small fw-semibold">Business reason</label>
+            <div className={l.category === 'ROAD' ? 'col-md-3' : 'col-md-6'}><label className="form-label small fw-semibold">Business reason</label>
               <input className="form-control" value={l.reason} onChange={(e) => set(i, { reason: e.target.value })} /></div>
             <div className={l.category === 'ROAD' ? 'col-12' : 'col-md-6'}><label className="form-label small fw-semibold">Receipt *</label>
               <input type="file" className="form-control" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => { if (pick(i, e.target.files[0]) === null) e.target.value = ''; }} />

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiChevronDown, FiMoreVertical, FiCheckCircle, FiClock, FiXCircle, FiLock, FiUser, FiUsers, FiUserPlus } from 'react-icons/fi';
 import api, { errMsg } from '../services/api';
-import { Alert, fmtDate } from './ui';
+import { Alert } from './ui';
 import FreezeEmployeeModal from './FreezeEmployeeModal';
 
 const BRANCHES = ['Corporate HQ', 'Branch A', 'Branch B'];
@@ -15,7 +15,9 @@ const BankPill = ({ s }) => {
 };
 const StatusPill = ({ s }) => (s === 'active'
   ? <span className="chip chip-green"><span className="dot-sm" /> Active</span>
-  : <span className="chip chip-red"><FiLock /> Frozen</span>);
+  : s === 'pending'
+    ? <span className="chip chip-amber"><FiClock /> Pending setup</span>
+    : <span className="chip chip-red"><FiLock /> Frozen</span>);
 
 export default function EmployeeTable() {
   const nav = useNavigate();
@@ -42,7 +44,7 @@ export default function EmployeeTable() {
   }, []);
 
   const list = useMemo(() => {
-    const get = { empCode: (u) => u.empCode, fullName: (u) => u.fullName.toLowerCase(), joiningDate: (u) => u.joiningDate, status: (u) => u.status };
+    const get = { empCode: (u) => u.empCode, fullName: (u) => u.fullName.toLowerCase(), joiningDate: (u) => u.joiningDate || '', status: (u) => u.status };
     const f = rows.filter((u) => !branch || u.branch === branch);
     const g = get[sort.key];
     return f.sort((a, b) => (g(a) > g(b) ? 1 : g(a) < g(b) ? -1 : 0) * (sort.dir === 'asc' ? 1 : -1));
@@ -75,7 +77,7 @@ export default function EmployeeTable() {
       <Alert onClose={() => setErr('')}>{err}</Alert><Alert type="success" onClose={() => setMsg('')}>{msg}</Alert>
       <div className="emp-filters">
         <div className="search-field"><FiSearch /><input placeholder="Search name, email or code" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        {[[branch, setBranch, 'All branches', BRANCHES], [status, setStatus, 'All statuses', ['active', 'frozen']]].map(([v, set, label, opts]) => (
+        {[[branch, setBranch, 'All branches', BRANCHES], [status, setStatus, 'All statuses', ['active', 'pending', 'frozen']]].map(([v, set, label, opts]) => (
           <div className="select-field" key={label}>
             <select value={v} onChange={(e) => set(e.target.value)}><option value="">{label}</option>{opts.map((o) => <option key={o} value={o}>{o[0].toUpperCase() + o.slice(1)}</option>)}</select>
             <FiChevronDown />
@@ -96,20 +98,27 @@ export default function EmployeeTable() {
       ) : (
         <div className="card emp-card"><div className="table-responsive" style={{ overflow: menu ? 'visible' : undefined }}>
           <table className="table emp-table align-middle mb-0">
-            <thead><tr><Th k="empCode">Code</Th><Th k="fullName">Employee</Th><Th>Department</Th><Th>Branch</Th><Th k="joiningDate">Joined</Th><Th>Bank</Th><Th k="status">Status</Th><Th>Actions</Th></tr></thead>
+            <thead><tr><Th k="empCode">Code</Th><Th k="fullName">Employee</Th><Th k="joiningDate">Joining date</Th><Th>Branch</Th><Th>Bank</Th><Th k="status">Status</Th><Th>Actions</Th></tr></thead>
             <tbody>
               {list.map((u) => (
                 <tr key={u.id} onClick={() => nav(`/hr/employees/${u.id}`)} style={{ cursor: 'pointer' }}>
-                  <td className="text-nowrap">{u.empCode}</td>
-                  <td><div className="fw-bold">{u.fullName}</div><div className="text-muted small">{u.email}</div></td>
-                  <td>{u.department}</td><td className="text-nowrap">{u.branch}</td><td className="text-nowrap">{fmtDate(u.joiningDate)}</td>
-                  <td><BankPill s={u.bank?.status} /></td><td><StatusPill s={u.status} /></td>
-                  <td onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
+                  <td className="text-nowrap" data-label="Code">{u.empCode}</td>
+                  <td data-label="Employee"><div className="fw-bold">{u.fullName}</div><div className="text-muted small">{u.email}</div></td>
+                  <td className="text-nowrap" data-label="Joining date">{u.joiningDate || '—'}</td>
+                  <td className="text-nowrap" data-label="Branch">{u.branch}</td>
+                  <td data-label="Bank"><BankPill s={u.bank?.status} /></td><td data-label="Status"><StatusPill s={u.status} /></td>
+                  <td data-label="Actions" onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
                     <button className="kebab" aria-label="Actions" onClick={() => setMenu(menu === u.id ? null : u.id)}><FiMoreVertical /></button>
                     {menu === u.id && (
                       <div className="kebab-menu">
                         <Link to={`/hr/employees/${u.id}`}><FiUser /> View details</Link>
-                        {u.role !== 'admin' && <button onClick={() => u.status === 'active' ? (setFreezeTarget(u), setMenu(null)) : toggleFreeze(u)}><FiLock /> {u.status === 'active' ? 'Freeze account' : 'Reactivate'}</button>}
+                        {u.role !== 'admin' && ['active', 'frozen'].includes(u.status) && (
+                          <button
+                            onClick={() => u.status === 'active' ? (setFreezeTarget(u), setMenu(null)) : toggleFreeze(u)}
+                          >
+                            <FiLock /> {u.status === 'active' ? 'Freeze account' : 'Reactivate'}
+                          </button>
+                        )}
                       </div>)}
                   </td>
                 </tr>))}

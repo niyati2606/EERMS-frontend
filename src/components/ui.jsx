@@ -16,18 +16,24 @@ const STATUS = {
   DRAFT: 'secondary', SUBMITTED: 'info', UNDER_REVIEW: 'warning', INFO_REQUESTED: 'warning', APPROVED: 'success', REJECTED: 'danger', PAID: 'success',
   Pending: 'warning', Verified: 'success', Rejected: 'danger', active: 'success', frozen: 'secondary', pending: 'warning', invited: 'info',
 };
-export const StatusBadge = ({ s }) => <span className={`badge rounded-pill text-bg-${STATUS[s] || 'secondary'}`}>{String(s).replace('_', ' ')}</span>;
+export const StatusBadge = ({ s }) => (
+  <span
+    className={`badge rounded-pill text-bg-${STATUS[s] || 'secondary'} d-inline-flex align-items-center justify-content-center`}
+  >
+    {String(s).replace('_', ' ')}
+  </span>
+);
 
 export const Flags = ({ flags = [] }) => (
   <>{flags.map((f) => (
-    <span key={f.code} className={`badge me-1 ${f.code === 'HIGH_VALUE' || f.code === 'DUPLICATE' ? 'text-bg-danger' : 'text-bg-warning'}`} title={f.label}>{f.label}</span>
+    <span key={f.code} className={`badge me-1 ${['HIGH_VALUE', 'RECEIPT_DUPLICATE'].includes(f.code) ? 'text-bg-danger' : 'text-bg-warning'}`} title={f.label}>{f.label}</span>
   ))}</>
 );
 
-export const PageHeader = ({ title, sub, children }) => (
+export const PageHeader = ({ title, sub, children, actionsClassName = '' }) => (
   <div className="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-2">
     <div><h2 className="h4 fw-bold mb-1">{title}</h2>{sub && <div className="text-muted">{sub}</div>}</div>
-    <div className="d-flex gap-2">{children}</div>
+    <div className={`d-flex gap-2 ${actionsClassName}`}>{children}</div>
   </div>
 );
 
@@ -50,12 +56,18 @@ export function useBlobUrl(path) {
   return state;
 }
 
-export function FileViewer({ path, zoom = 1 }) {
+export function FileViewer({ path, zoom = 1, rotation = 0 }) {
   const { url, type, err } = useBlobUrl(path);
   if (err) return <div className="text-danger p-4">{err}</div>;
   if (!url) return <div className="text-muted p-4">Loading…</div>;
-  if (type === 'application/pdf') return <iframe title="file" src={url} style={{ width: '100%', height: 560, border: 0 }} />;
-  return <div style={{ overflow: 'auto', maxHeight: 560 }}><img alt="receipt" src={url} style={{ width: `${zoom * 100}%`, maxWidth: 'none' }} /></div>;
+  if (type === 'application/pdf') {
+    return (
+      <div style={{ overflow: 'auto', maxHeight: 560 }}>
+        <iframe title="file" src={url} style={{ width: '100%', height: 560, border: 0, transform: `scale(${zoom}) rotate(${rotation}deg)`, transformOrigin: 'center center' }} />
+      </div>
+    );
+  }
+  return <div style={{ overflow: 'auto', maxHeight: 560 }}><img alt="receipt" src={url} style={{ width: `${zoom * 100}%`, maxWidth: 'none', transform: `rotate(${rotation}deg)`, transformOrigin: 'center center' }} /></div>;
 }
 
 export function downloadText(name, text, mime = 'text/csv') {

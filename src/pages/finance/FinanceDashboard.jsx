@@ -4,7 +4,8 @@ import api, { errMsg } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Hero, Avatar, Stat, Alert, inr, ago } from '../../components/ui';
 
-const pillClass = (code) => (['HIGH_VALUE', 'DUPLICATE', 'AGED'].includes(code) ? 'bad' : 'warn');
+const pillClass = (code) => (['HIGH_VALUE', 'RECEIPT_DUPLICATE'].includes(code) ? 'bad' : 'warn');
+const employeeName = (claim) => claim.employee?.fullName || 'Employee record unavailable';
 
 export default function FinanceDashboard() {
   const { user } = useAuth();
@@ -26,19 +27,19 @@ export default function FinanceDashboard() {
     try { await api.post(`/finance/claims/${c.id}/assign`); nav(`/finance/review/${c.id}`); } catch (e) { setErr(errMsg(e)); load(); }
   };
   const pending = rows ? rows.filter((c) => !c.lockedBy) : [];
-  const urgent = rows ? rows.filter((c) => c.flags.some((f) => ['AGED', 'HIGH_VALUE'].includes(f.code))) : [];
+  const urgent = rows ? rows.filter((c) => c.flags.some((f) => ['AGED', 'HIGH_VALUE', 'DUPLICATE', 'RECEIPT_DUPLICATE', 'MILEAGE_POLICY'].includes(f.code))) : [];
 
   return (
     <>
       <Hero eyebrow="Shared work queue · oldest first"
-        chips={(urgent.length ? urgent : pending).map((c) => ({ avatar: c.employee.fullName, title: `${c.ticketRef} · ${inr(c.total)}`, sub: `${c.employee.fullName} · waiting ${ago(c.submittedAt)}` }))}>
+        chips={(urgent.length ? urgent : pending).map((c) => ({ avatar: employeeName(c), title: `${c.ticketRef} · ${inr(c.total)}`, sub: `${employeeName(c)} · waiting ${ago(c.submittedAt)}` }))}>
         {stats ? <><b>{stats.inQueue} claims</b> are waiting for audit. <b>{stats.aged + stats.highValue}</b> need attention first.</> : 'Loading queue…'}
       </Hero>
       {stats && (
         <div className="row g-3 mb-4">
           <div className="col-6 col-lg-3"><Stat label="Unassigned" value={stats.inQueue} /></div>
           <div className="col-6 col-lg-3"><Stat label="Locked by me" value={stats.myLocked} tone="coral" /></div>
-          <div className="col-6 col-lg-3"><Stat label="Aged > 72h" value={stats.aged} tone="danger" /></div>
+          <div className="col-6 col-lg-3"><Stat label="Aged > 72 business hours" value={stats.aged} tone="danger" sub="Mon–Fri, 9:00–17:00 IST" /></div>
           <div className="col-6 col-lg-3"><Stat label="Ready to pay" value={stats.toPay} tone="success" sub={<Link to="/finance/payments">Open payments →</Link>} /></div>
         </div>)}
       <Alert onClose={() => setErr('')}>{err}</Alert>
@@ -52,10 +53,10 @@ export default function FinanceDashboard() {
           const mine = c.lockedBy === user.id; const own = c.employeeId === user.id;
           return (
             <div className="decision-row" key={c.id}>
-              <Avatar name={c.employee.fullName} lg />
+              <Avatar name={employeeName(c)} lg />
               <div className="grow">
-                <div className="fw-semibold text-truncate">{c.ticketRef} · {c.employee.fullName} <span className="text-muted fw-normal">· {inr(c.total)}</span></div>
-                <div className="small text-muted text-truncate">{c.employee.empCode} · {c.employee.branch}
+                <div className="fw-semibold text-truncate">{c.ticketRef} · {employeeName(c)} <span className="text-muted fw-normal">· {inr(c.total)}</span></div>
+                <div className="small text-muted text-truncate">{c.employee?.empCode || '—'} · {c.employee?.branch || '—'}
                   {c.flags.map((f) => <span key={f.code} className={`pill ${pillClass(f.code)}`}>{f.label}</span>)}
                   {c.lockedBy && <span className="pill ok">🔒 {mine ? 'You' : c.lockedByName}</span>}</div>
               </div>

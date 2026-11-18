@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import SetPassword from './pages/SetPassword';
+import ForgotPassword from './pages/ForgotPassword';
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
 import EmployeeProfile from './pages/employee/EmployeeProfile';
 import NewClaim from './pages/employee/NewClaim';
@@ -16,6 +17,7 @@ import EmployeeList from './pages/hr/EmployeeList';
 import EmployeeDetail from './pages/hr/EmployeeDetail';
 import AddEmployee from './pages/hr/AddEmployee';
 import AddFinance from './pages/hr/AddFinance';
+import FinanceEmployees from './pages/hr/FinanceEmployees';
 import BankVerification from './pages/hr/BankVerification';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AuditLog from './pages/admin/AuditLog';
@@ -34,7 +36,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to={HOME[user.role]} replace /> : <Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/set-password" element={<SetPassword />} />
+      <Route path="/reset-password" element={<SetPassword isReset />} />
       <Route element={<Guard roles={['employee']} />}>
         <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
         <Route path="/employee/profile" element={<EmployeeProfile />} />
@@ -53,6 +57,7 @@ export default function App() {
         <Route path="/hr/employees/new" element={<AddEmployee />} />
         <Route path="/hr/employees/:id" element={<EmployeeDetail />} />
         <Route path="/hr/finance" element={<AddFinance />} />
+        <Route path="/hr/finance/employees" element={<FinanceEmployees />} />
         <Route path="/hr/bank-verification" element={<BankVerification />} />
       </Route>
       <Route element={<Guard roles={['admin']} />}>

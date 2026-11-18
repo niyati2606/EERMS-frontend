@@ -65,14 +65,13 @@ export default function AdminDashboard() {
       <div className="row g-3 mb-4">
         <div className="col-lg-6"><Chart title="Monthly spend trend"><LineChart data={a.trend}><CartesianGrid strokeDasharray="3 3" stroke="#e8e0d6" /><XAxis dataKey="month" /><YAxis tickFormatter={compact} /><Tooltip formatter={(v) => inr(v)} /><Line type="monotone" dataKey="amount" stroke="#6d4ae0" strokeWidth={3} dot={{ r: 4 }} /></LineChart></Chart></div>
         <div className="col-lg-6"><Chart title="Spend by branch"><BarChart data={a.byBranch}><CartesianGrid strokeDasharray="3 3" stroke="#e8e0d6" /><XAxis dataKey="name" /><YAxis tickFormatter={compact} /><Tooltip formatter={(v) => inr(v)} /><Bar dataKey="amount" fill="#6d4ae0" radius={[6, 6, 0, 0]} /></BarChart></Chart></div>
-        <div className="col-lg-6"><Chart title="Department burn"><BarChart data={a.byDepartment} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#e8e0d6" /><XAxis type="number" tickFormatter={compact} /><YAxis type="category" dataKey="name" width={90} /><Tooltip formatter={(v) => inr(v)} /><Bar dataKey="amount" fill="#2f9aa0" radius={[0, 6, 6, 0]} /></BarChart></Chart></div>
         <div className="col-lg-6"><Chart title="Claims by status"><BarChart data={a.statusCounts}><CartesianGrid strokeDasharray="3 3" stroke="#e8e0d6" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis allowDecimals={false} /><Tooltip /><Bar dataKey="count" fill="#FF7F50" radius={[6, 6, 0, 0]} /></BarChart></Chart></div>
       </div>
 
       <div className="card"><div className="card-header">Universal search</div><div className="card-body">
         <input className="form-control mb-3" style={{ maxWidth: 420 }} placeholder="Ticket Ref (EXP-2026-0007) or Employee ID (EMP-0005)" value={q} onChange={(e) => setQ(e.target.value)} />
         {res && (<>
-          {res.employees.map((e) => <div key={e.id} className="border-bottom py-1">👤 <strong>{e.empCode}</strong> {e.fullName} · {e.department} · {e.branch} <StatusBadge s={e.status} /></div>)}
+          {res.employees.map((e) => <div key={e.id} className="border-bottom py-1">👤 <strong>{e.empCode}</strong> {e.fullName} · {e.branch} <StatusBadge s={e.status} /></div>)}
           {res.claims.map((c) => <div key={c.id} className="border-bottom py-1">🧾 <strong>{c.ticketRef}</strong> {c.employee.fullName} · {inr(c.total)} <StatusBadge s={c.status} /></div>)}
           {!res.employees.length && !res.claims.length && <div className="text-muted">No matches</div>}</>)}
       </div></div>
