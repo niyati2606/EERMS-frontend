@@ -63,7 +63,7 @@ export default function EmployeeProfile() {
                     <div className="col-md-6"><label className="form-label fw-semibold">Full name</label><input className="form-control" maxLength={150} required value={personal.fullName} onChange={(e) => setPersonal({ ...personal, fullName: e.target.value })} /></div>
                     <div className="col-md-6"><label className="form-label fw-semibold">Phone</label><input className="form-control" maxLength={20} value={personal.phone} onChange={(e) => setPersonal({ ...personal, phone: e.target.value })} /></div>
                     <div className="col-md-6"><label className="form-label fw-semibold">Branch</label><div className="form-control-plaintext mb-0">{employee.branch || '—'}</div></div>
-                    <div className="col-md-6"><label className="form-label fw-semibold">Joining date</label><div className="form-control-plaintext mb-0">{employee.joiningDate || '—'}</div></div>
+                    <div className="col-md-6"><label className="form-label fw-semibold">Joining date</label><div className="form-control-plaintext mb-0">{(() => { const m = String(employee.joiningDate || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : '—'; })()}</div></div>
                   </div>
                   <div className="d-flex justify-content-end mt-3">
                     <button className="btn btn-purple" type="submit" disabled={busy}>Save personal details</button>

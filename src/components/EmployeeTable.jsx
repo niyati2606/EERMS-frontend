@@ -114,7 +114,7 @@ export default function EmployeeTable() {
                 <tr key={u.id} onClick={() => nav(`/hr/employees/${u.id}`)} style={{ cursor: 'pointer' }}>
                   <td className="text-nowrap" data-label="Code">{u.empCode}</td>
                   <td data-label="Employee"><div className="fw-bold">{u.fullName}</div><div className="text-muted small">{u.email}</div></td>
-                  <td className="text-nowrap" data-label="Joining date">{u.joiningDate || '—'}</td>
+                  <td className="text-nowrap" data-label="Joining date">{(() => { const m = String(u.joiningDate || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : '—'; })()}</td>
                   <td className="text-nowrap" data-label="Branch">{u.branch}</td>
                   <td data-label="Bank"><BankPill s={u.bank?.status} /></td><td data-label="Status"><StatusPill s={u.status} /></td>
                   <td data-label="Actions" onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
