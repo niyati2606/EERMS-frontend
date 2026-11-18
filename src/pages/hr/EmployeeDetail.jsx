@@ -86,7 +86,14 @@ export default function EmployeeDetail() {
         <Link className="btn btn-light border" to="/hr/employees">← Back</Link>
         {u.status !== 'active' && <button className="btn btn-outline-purple" onClick={resendSetup}>Resend password setup email</button>}
         {!edit && <button className="btn btn-outline-purple" onClick={startEdit}>Edit</button>}
-        {u.role !== 'admin' && <button className={`btn ${u.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'}`} onClick={() => u.status === 'active' ? setShowFreezeModal(true) : toggle(false)}>{u.status === 'active' ? 'Freeze account' : 'Reactivate'}</button>}
+        {u.role !== 'admin' && ['active', 'frozen'].includes(u.status) && (
+          <button
+            className={`btn ${u.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'}`}
+            onClick={() => u.status === 'active' ? setShowFreezeModal(true) : toggle(false)}
+          >
+            {u.status === 'active' ? 'Freeze account' : 'Reactivate'}
+          </button>
+        )}
       </PageHeader>
       <Alert onClose={() => setErr('')}>{err}</Alert><Alert type="success" onClose={() => setMsg('')}>{msg}</Alert>
 
@@ -112,7 +119,7 @@ export default function EmployeeDetail() {
           <span>Payout bank details</span>
           <div className="d-flex align-items-center gap-2">
             {b && <StatusBadge s={b.status} />}
-            {b && !bankEdit && <button className="btn btn-sm btn-outline-purple" type="button" onClick={startBankEdit}>Edit details</button>}
+            {b?.status === 'Verified' && !bankEdit && <button className="btn btn-sm btn-outline-purple" type="button" onClick={startBankEdit}>Edit details</button>}
           </div>
         </div><div className="card-body">
           {!b ? <div className="text-muted">No bank details on record.</div> : (
