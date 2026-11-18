@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import api, { errMsg } from '../../services/api';
-import { PageHeader, Hero, Stat, Alert, StatusBadge, LoadingSkeleton, inr, downloadText } from '../../components/ui';
+import { PageHeader, Hero, Stat, Alert, LoadingSkeleton, inr, downloadText } from '../../components/ui';
 
 const compact = (v) => (v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`);
 
@@ -14,19 +13,10 @@ export default function AdminDashboard() {
   const [a, setA] = useState(null);
   const [edit, setEdit] = useState(false);
   const [bud, setBud] = useState(null);
-  const [sp] = useSearchParams();
-  const [q, setQ] = useState(sp.get('q') || '');
-  useEffect(() => { setQ(sp.get('q') || ''); }, [sp]);
-  const [res, setRes] = useState(null);
   const [err, setErr] = useState('');
 
   const load = () => api.get('/admin/analytics').then((r) => setA(r.data));
   useEffect(() => { load(); }, []);
-  useEffect(() => {
-    if (!q.trim()) { setRes(null); return undefined; }
-    const t = setTimeout(() => api.get('/admin/search', { params: { q } }).then((r) => setRes(r.data)), 250);
-    return () => clearTimeout(t);
-  }, [q]);
 
   const openBudget = () => api.get('/admin/budget').then((r) => { setBud(r.data); setEdit(true); });
   const saveBudget = async () => { try { await api.put('/admin/budget', bud); setEdit(false); load(); } catch (e) { setErr(errMsg(e)); } };
@@ -67,14 +57,6 @@ export default function AdminDashboard() {
         <div className="col-lg-6"><Chart title="Spend by branch"><BarChart data={a.byBranch}><CartesianGrid strokeDasharray="3 3" stroke="#e8e0d6" /><XAxis dataKey="name" /><YAxis tickFormatter={compact} /><Tooltip formatter={(v) => inr(v)} /><Bar dataKey="amount" fill="#6d4ae0" radius={[6, 6, 0, 0]} /></BarChart></Chart></div>
         <div className="col-lg-6"><Chart title="Claims by status"><BarChart data={a.statusCounts}><CartesianGrid strokeDasharray="3 3" stroke="#e8e0d6" /><XAxis dataKey="name" tick={{ fontSize: 10 }} /><YAxis allowDecimals={false} /><Tooltip /><Bar dataKey="count" fill="#FF7F50" radius={[6, 6, 0, 0]} /></BarChart></Chart></div>
       </div>
-
-      <div className="card"><div className="card-header">Universal search</div><div className="card-body">
-        <input className="form-control mb-3" style={{ maxWidth: 420 }} placeholder="Ticket Ref (EXP-2026-0007) or Employee ID (EMP-0005)" value={q} onChange={(e) => setQ(e.target.value)} />
-        {res && (<>
-          {res.employees.map((e) => <div key={e.id} className="border-bottom py-1">👤 <strong>{e.empCode}</strong> {e.fullName} · {e.branch} <StatusBadge s={e.status} /></div>)}
-          {res.claims.map((c) => <div key={c.id} className="border-bottom py-1">🧾 <strong>{c.ticketRef}</strong> {c.employee.fullName} · {inr(c.total)} <StatusBadge s={c.status} /></div>)}
-          {!res.employees.length && !res.claims.length && <div className="text-muted">No matches</div>}</>)}
-      </div></div>
 
       {edit && bud && (
         <div className="modal d-block" style={{ background: 'rgba(0,0,0,.4)' }}><div className="modal-dialog"><div className="modal-content" style={{ borderRadius: 16 }}>

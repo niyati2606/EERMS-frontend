@@ -35,7 +35,7 @@ Copy `eerms-backend/.env.example` to `eerms-backend/.env`, then set `SMTP_HOST`,
 - EFT/CSV batch export (verified bank + active employee only), UTR entry to mark PAID
 - Flags: > ₹25,000, 72 business-hour aging (Mon–Fri, 9:00–17:00 IST) with in-app digests to active Finance users, meals/hotel caps, 45-day grace, GST breakdown, and ₹50/km road policy check
 - HR: employee list/freeze, 3-step Add Employee wizard, Bank Verification page
-- Admin: monthly budget + all-category tracker, branch/department/trend charts, SLA, universal search, hash-chained audit trail, CSV export
+- Admin: monthly budget + all-category tracker, branch/department/trend charts, SLA, hash-chained audit trail, CSV export
 
 ## Notes
 - Data is kept in memory and persisted every 2 s. Locally it is saved to `eerms-backend/data/store.json`; on Vercel it requires `DATABASE_URL`/`POSTGRES_URL` and is saved to PostgreSQL. Delete the local JSON file to reset local demo data.
