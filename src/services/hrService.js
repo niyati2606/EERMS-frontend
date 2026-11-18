@@ -20,4 +20,5 @@ export function createEmployee(d) {
 
 export const getFinanceStaff = () => api.get('/hr/finance').then((r) => r.data);
 export const createFinanceStaff = (d) => api.post('/hr/finance', d);
+export const updateFinanceStaff = (id, d) => api.put(`/hr/finance/${id}`, d).then((r) => r.data);
 export const resendSetupEmail = (id) => api.post(`/hr/employees/${id}/resend-setup`).then((r) => r.data);

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiCheck, FiChevronDown, FiCopy, FiMail, FiPlus, FiSearch, FiUsers } from 'react-icons/fi';
+import { FiCheck, FiChevronDown, FiCopy, FiEdit2, FiMail, FiSearch, FiUsers } from 'react-icons/fi';
 import { errMsg } from '../../services/api';
-import { getFinanceStaff, resendSetupEmail } from '../../services/hrService';
+import { getFinanceStaff, resendSetupEmail, updateFinanceStaff } from '../../services/hrService';
 import { Alert, PageHeader, StatusBadge, LoadingSkeleton } from '../../components/ui';
+
+const BRANCHES = ['Corporate HQ', 'Branch A', 'Branch B'];
 
 export default function FinanceEmployees() {
   const location = useLocation();
@@ -17,6 +19,10 @@ export default function FinanceEmployees() {
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [editTarget, setEditTarget] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [editError, setEditError] = useState('');
+  const [editBusy, setEditBusy] = useState(false);
 
   const normalizedSearch = search.trim().toLowerCase();
   const branches = [...new Set(employees.map((employee) => employee.branch || 'Corporate HQ'))].sort();
@@ -72,6 +78,35 @@ export default function FinanceEmployees() {
       setCopied(true);
     } catch (e) {
       setError(errMsg(e));
+    }
+  };
+
+  const openEdit = (employee) => {
+    setSuccess('');
+    setSetupUrl('');
+    setEditTarget(employee);
+    setEditForm({
+      fullName: employee.fullName,
+      email: employee.email,
+      phone: employee.phone || '',
+      branch: employee.branch || 'Corporate HQ',
+    });
+    setEditError('');
+  };
+
+  const saveEdit = async (event) => {
+    event.preventDefault();
+    setEditBusy(true);
+    setEditError('');
+    try {
+      const updated = await updateFinanceStaff(editTarget.id, editForm);
+      setEmployees((current) => current.map((employee) => employee.id === updated.id ? updated : employee));
+      setEditTarget(null);
+      setSuccess('Finance employee details updated.');
+    } catch (e) {
+      setEditError(errMsg(e));
+    } finally {
+      setEditBusy(false);
     }
   };
 
@@ -176,7 +211,15 @@ export default function FinanceEmployees() {
                     <td className="small">{employee.branch || 'Corporate HQ'}</td>
                     <td><StatusBadge s={employee.status} /></td>
                     <td className="text-end">
-                      {employee.status !== 'active' ? (
+                      <div className="d-flex justify-content-end gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-purple"
+                          onClick={() => openEdit(employee)}
+                        >
+                          <FiEdit2 className="me-1" />Edit
+                        </button>
+                        {employee.status !== 'active' && (
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-purple"
@@ -187,12 +230,42 @@ export default function FinanceEmployees() {
                           <FiMail className="me-1" />
                           {actionBusy === employee.id ? 'Sending…' : 'Resend link'}
                         </button>
-                      ) : <span className="text-muted small">—</span>}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      {editTarget && editForm && (
+        <div className="modal d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="edit-finance-title" style={{ background: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <form className="modal-content" onSubmit={saveEdit}>
+              <div className="modal-header">
+                <h2 className="modal-title fs-5" id="edit-finance-title">Edit Finance employee</h2>
+                <button type="button" className="btn-close" aria-label="Close" disabled={editBusy} onClick={() => setEditTarget(null)} />
+              </div>
+              <div className="modal-body">
+                {editError && <div className="alert alert-danger" role="alert">{editError}</div>}
+                <label className="form-label fw-semibold" htmlFor="edit-finance-name">Full name</label>
+                <input id="edit-finance-name" className="form-control mb-3" required maxLength={150} value={editForm.fullName} onChange={(event) => setEditForm({ ...editForm, fullName: event.target.value })} />
+                <label className="form-label fw-semibold" htmlFor="edit-finance-email">Official email</label>
+                <input id="edit-finance-email" type="email" className="form-control mb-3" required maxLength={150} value={editForm.email} onChange={(event) => setEditForm({ ...editForm, email: event.target.value })} />
+                <label className="form-label fw-semibold" htmlFor="edit-finance-phone">Phone number</label>
+                <input id="edit-finance-phone" type="tel" className="form-control mb-3" required maxLength={20} value={editForm.phone} onChange={(event) => setEditForm({ ...editForm, phone: event.target.value })} />
+                <label className="form-label fw-semibold" htmlFor="edit-finance-branch">Branch</label>
+                <select id="edit-finance-branch" className="form-select" required value={editForm.branch} onChange={(event) => setEditForm({ ...editForm, branch: event.target.value })}>
+                  {BRANCHES.map((branch) => <option key={branch} value={branch}>{branch}</option>)}
+                </select>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-light border" disabled={editBusy} onClick={() => setEditTarget(null)}>Cancel</button>
+                <button type="submit" className="btn btn-purple" disabled={editBusy}>{editBusy ? 'Saving…' : 'Save changes'}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
