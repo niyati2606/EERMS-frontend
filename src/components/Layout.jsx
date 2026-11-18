@@ -18,7 +18,7 @@ const NAV = {
   ['/hr/bank-verification', 'Bank Verification', FiShield]],
   admin: [['/admin/dashboard', 'Spend Analytics', FiBarChart2], ['/admin/audit', 'Audit Trail', FiClipboard]],
 };
-const SEARCH = { finance: ['/finance/dashboard', 'Search ticket (EXP-2026-0007) or employee…'], admin: ['/admin/dashboard', 'Search ticket or employee ID…'] };
+const SEARCH = { finance: ['/finance/dashboard', 'Search ticket (EXP-2026-0007) or employee…'] };
 const ROLE = { employee: 'Employee', finance: 'Finance Officer', hr: 'HR Administrator', admin: 'Admin / Executive' };
 
 export default function Layout() {
