@@ -82,8 +82,14 @@ export function useBlobUrl(path) {
     let u; let live = true;
     api.get(path, { responseType: 'blob' }).then((r) => {
       if (!live) return;
-      u = URL.createObjectURL(r.data);
-      setState({ url: u, type: r.data.type, err: null });
+      const responseType = (r.data.type || r.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+      const isPdf = responseType === 'application/pdf' || /\.pdf(?:$|[?#])/i.test(path);
+      const blobType = (r.data.type || '').split(';')[0].trim().toLowerCase();
+      const blob = isPdf && blobType !== 'application/pdf'
+        ? new Blob([r.data], { type: 'application/pdf' })
+        : r.data;
+      u = URL.createObjectURL(blob);
+      setState({ url: u, type: isPdf ? 'application/pdf' : responseType, err: null });
     }).catch(() => live && setState({ url: null, type: null, err: 'Could not load file' }));
     return () => { live = false; if (u) URL.revokeObjectURL(u); };
   }, [path]);
