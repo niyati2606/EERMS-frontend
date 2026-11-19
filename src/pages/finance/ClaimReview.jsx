@@ -5,6 +5,8 @@ import api, { errMsg } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { PageHeader, StatusBadge, Flags, Alert, FileViewer, LoadingSkeleton, CATS, inr, fmtDate } from '../../components/ui';
 
+const hasOnlyLettersAndSpaces = (value) => /^[\p{L} ]*$/u.test(value);
+
 export default function ClaimReview() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -15,6 +17,8 @@ export default function ClaimReview() {
   const [rotation, setRotation] = useState(0);
   const [note, setNote] = useState('');
   const [handoffNote, setHandoffNote] = useState('');
+  const [noteError, setNoteError] = useState('');
+  const [handoffError, setHandoffError] = useState('');
   const [err, setErr] = useState('');
   const [left, setLeft] = useState('');
 
@@ -37,11 +41,25 @@ export default function ClaimReview() {
   const act = async (fn) => { setErr(''); try { await fn(); } catch (e) { setErr(errMsg(e)); } };
   const assign = () => act(async () => setC((await api.post(`/finance/claims/${id}/assign`)).data));
   const release = () => act(async () => {
-    if (!handoffNote.trim()) { setErr('A handoff remark is required to release this claim.'); return; }
-    await api.post(`/finance/claims/${id}/release`, { note: handoffNote });
+    if (!handoffNote.trim()) { setHandoffError('A handoff remark is required to release this claim.'); return; }
+    if (!hasOnlyLettersAndSpaces(handoffNote)) { setHandoffError('Use letters and spaces only.'); return; }
+    setHandoffError('');
+    await api.post(`/finance/claims/${id}/release`, { note: handoffNote.trim() });
     nav('/finance/dashboard');
   });
-  const decide = (decision) => act(async () => { await api.post(`/finance/claims/${id}/decision`, { decision, note }); nav('/finance/dashboard'); });
+  const decide = (decision) => {
+    setErr('');
+    if (decision !== 'approve' && !note.trim()) {
+      setNoteError('A written note is required for this decision.');
+      return;
+    }
+    if (!hasOnlyLettersAndSpaces(note)) {
+      setNoteError('Use letters and spaces only.');
+      return;
+    }
+    setNoteError('');
+    return act(async () => { await api.post(`/finance/claims/${id}/decision`, { decision, note: note.trim() }); nav('/finance/dashboard'); });
+  };
   const line = c.lines[sel];
   const handoffs = (c.history || []).filter((entry) => entry.note?.startsWith('Released for handoff:')).slice(-3).reverse();
 
@@ -49,13 +67,15 @@ export default function ClaimReview() {
     <>
       <PageHeader title={`Audit ${c.ticketRef}`} sub={`${c.employee.fullName} · ${c.employee.empCode} · ${c.employee.branch}`}>
         {mine && <span className={`badge fs-6 align-self-center ${left === 'expired' ? 'text-bg-danger' : 'text-bg-warning'}`}>🔒 Lock {left}</span>}
-        {mine && <button className="btn btn-light border" onClick={release} disabled={!handoffNote.trim()}>Release ticket</button>}
+        {mine && <button className="btn btn-light border" onClick={release}>Release ticket</button>}
         {!c.lockedBy && ['SUBMITTED', 'UNDER_REVIEW'].includes(c.status) && <button className="btn btn-purple" onClick={assign} disabled={c.employeeId === user.id}>Assign to Me</button>}
       </PageHeader>
       {mine && (
         <div className="card mb-3"><div className="card-body">
           <label className="form-label fw-semibold" htmlFor="handoff-note">Handoff remark (required to release)</label>
-          <textarea id="handoff-note" className="form-control" rows="2" maxLength={500} value={handoffNote} onChange={(e) => setHandoffNote(e.target.value)} />
+          <textarea id="handoff-note" className={`form-control${handoffError ? ' is-invalid' : ''}`} rows="2" maxLength={500} value={handoffNote} aria-invalid={Boolean(handoffError)} aria-describedby={handoffError ? 'handoff-note-error' : 'handoff-note-help'} onChange={(e) => { setHandoffNote(e.target.value); setHandoffError(e.target.value && !hasOnlyLettersAndSpaces(e.target.value) ? 'Use letters and spaces only.' : ''); }} />
+          {handoffError && <div className="invalid-feedback d-block" id="handoff-note-error">{handoffError}</div>}
+          <div className="form-text" id="handoff-note-help">Use letters and spaces only.</div>
         </div></div>
       )}
       <Alert onClose={() => setErr('')}>{err}</Alert>
@@ -90,7 +110,10 @@ export default function ClaimReview() {
           </div>
           {mine && (
             <div className="card"><div className="card-header">Decision</div><div className="card-body">
-              <textarea className="form-control mb-3" rows="3" placeholder="Written note (mandatory for Request Info / Reject)" value={note} onChange={(e) => setNote(e.target.value)} />
+              <label className="form-label fw-semibold" htmlFor="decision-note">Decision note</label>
+              <textarea id="decision-note" className={`form-control${noteError ? ' is-invalid' : ''}`} rows="3" maxLength={500} placeholder="Written note (mandatory for Request Info / Reject)" value={note} aria-invalid={Boolean(noteError)} aria-describedby={noteError ? 'decision-note-error' : 'decision-note-help'} onChange={(e) => { setNote(e.target.value); setNoteError(e.target.value && !hasOnlyLettersAndSpaces(e.target.value) ? 'Use letters and spaces only.' : ''); }} />
+              {noteError && <div className="invalid-feedback d-block" id="decision-note-error">{noteError}</div>}
+              <div className="form-text mb-3" id="decision-note-help">Use letters and spaces only.</div>
               <div className="d-flex gap-2 flex-wrap">
                 <button className="btn btn-success" onClick={() => decide('approve')}>Approve</button>
                 <button className="btn btn-warning" onClick={() => decide('info')}>Request info</button>

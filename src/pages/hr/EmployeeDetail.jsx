@@ -4,6 +4,7 @@ import api, { errMsg } from '../../services/api';
 import { getHrMeta, resendSetupEmail } from '../../services/hrService';
 import { PageHeader, StatusBadge, Alert, LoadingSkeleton } from '../../components/ui';
 import FreezeEmployeeModal from '../../components/FreezeEmployeeModal';
+import { isValidPersonName } from '../../utils/validation';
 
 const Row = ({ k, v }) => (<div className="mb-2"><div className="small text-uppercase text-muted">{k}</div><div className="fw-semibold">{v || '—'}</div></div>);
 const formatDate = (date) => {
@@ -22,6 +23,8 @@ export default function EmployeeDetail() {
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [freezeBusy, setFreezeBusy] = useState(false);
   const [bankSaving, setBankSaving] = useState(false);
+  const [editNameError, setEditNameError] = useState('');
+  const [accountHolderError, setAccountHolderError] = useState('');
 
   const load = () => {
     api.get(`/hr/employees/${id}`).then((r) => setU(r.data)).catch((e) => setErr(errMsg(e)));
@@ -42,17 +45,31 @@ export default function EmployeeDetail() {
 
   const save = async () => {
     setErr(''); setMsg('');
+    if (!isValidPersonName(edit.fullName)) {
+      setEditNameError('Full name can contain letters and spaces only.');
+      return;
+    }
+    setEditNameError('');
     try { const { data } = await api.put(`/hr/employees/${id}`, edit); setU(data); setEdit(null); setMsg('Employee updated.'); } catch (e) { setErr(errMsg(e)); }
   };
-  const startBankEdit = () => setBankEdit({
-    accountHolder: b.accountHolder,
-    bankName: b.bankName,
-    accountNumber: b.accountNumber,
-    ifsc: b.ifsc,
-  });
+  const startBankEdit = () => {
+    setAccountHolderError('');
+    setBankEdit({
+      accountHolder: b.accountHolder,
+      bankName: b.bankName,
+      accountNumber: b.accountNumber,
+      ifsc: b.ifsc,
+    });
+  };
   const saveBank = async (event) => {
     event.preventDefault();
-    setErr(''); setMsg(''); setBankSaving(true);
+    setErr(''); setMsg('');
+    if (!isValidPersonName(bankEdit.accountHolder)) {
+      setAccountHolderError('Account holder name can contain letters and spaces only.');
+      return;
+    }
+    setAccountHolderError('');
+    setBankSaving(true);
     try {
       const { data } = await api.put(`/hr/employees/${id}/bank`, {
         accountHolder: bankEdit.accountHolder.trim(),
@@ -80,9 +97,9 @@ export default function EmployeeDetail() {
     } catch (e) { setErr(errMsg(e)); }
     finally { if (freeze) setFreezeBusy(false); }
   };
-  const startEdit = () => setEdit({ fullName: u.fullName, email: u.email, phone: u.phone, branch: u.branch, joiningDate: u.joiningDate || '' });
+  const startEdit = () => { setEditNameError(''); setEdit({ fullName: u.fullName, email: u.email, phone: u.phone, branch: u.branch, joiningDate: u.joiningDate || '' }); };
   const e = edit;
-  const inp = (k, label, type = 'text') => (<div className="col-md-6"><label className="form-label small fw-semibold">{label}</label><input type={type} className="form-control" required={k === 'email'} value={e[k] || ''} onChange={(x) => setEdit({ ...e, [k]: x.target.value })} /></div>);
+  const inp = (k, label, type = 'text') => (<div className="col-md-6"><label className="form-label small fw-semibold">{label}</label><input type={type} className={`form-control${k === 'fullName' && editNameError ? ' is-invalid' : ''}`} required={k === 'email'} value={e[k] || ''} onChange={(x) => { setEdit({ ...e, [k]: x.target.value }); if (k === 'fullName') setEditNameError(x.target.value && !isValidPersonName(x.target.value) ? 'Full name can contain letters and spaces only.' : ''); }} />{k === 'fullName' && editNameError && <div className="invalid-feedback d-block">{editNameError}</div>}</div>);
 
   return (
     <>
@@ -132,7 +149,8 @@ export default function EmployeeDetail() {
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label small fw-semibold" htmlFor="bank-account-holder">Account holder</label>
-                    <input id="bank-account-holder" className="form-control" required value={bankEdit.accountHolder} onChange={(event) => setBankEdit({ ...bankEdit, accountHolder: event.target.value })} />
+                    <input id="bank-account-holder" className={`form-control${accountHolderError ? ' is-invalid' : ''}`} required value={bankEdit.accountHolder} aria-invalid={Boolean(accountHolderError)} aria-describedby={accountHolderError ? 'bank-account-holder-error' : undefined} onChange={(event) => { setBankEdit({ ...bankEdit, accountHolder: event.target.value }); setAccountHolderError(event.target.value && !isValidPersonName(event.target.value) ? 'Account holder name can contain letters and spaces only.' : ''); }} />
+                    {accountHolderError && <div className="invalid-feedback d-block" id="bank-account-holder-error">{accountHolderError}</div>}
                   </div>
                   <div className="col-md-6">
                     <label className="form-label small fw-semibold" htmlFor="bank-name">Bank name</label>

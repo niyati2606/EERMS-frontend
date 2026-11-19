@@ -1,13 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../services/api';
-import { PageHeader, StatusBadge, Stat, Hero, LoadingSkeleton, inr, fmtDate, useClaimPaths } from '../../components/ui';
+import { FiTrash2 } from 'react-icons/fi';
+import api, { errMsg } from '../../services/api';
+import { PageHeader, StatusBadge, Stat, Hero, LoadingSkeleton, Alert, inr, fmtDate, useClaimPaths } from '../../components/ui';
 
 export default function EmployeeDashboard() {
   const [claims, setClaims] = useState(null);
+  const [err, setErr] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const p = useClaimPaths();
   const load = () => api.get('/claims').then((r) => setClaims(r.data));
   useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, []);
+  const deleteDraft = async () => {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    setDeletingId(id);
+    setErr('');
+    try {
+      await api.delete(`/claims/${id}`);
+      await load();
+      setDeleteTarget(null);
+    } catch (e) {
+      setErr(errMsg(e));
+      setDeleteTarget(null);
+    } finally {
+      setDeletingId(null);
+    }
+  };
   if (!claims) return <LoadingSkeleton />;
   const sum = (f) => claims.filter(f).reduce((s, c) => s + c.total, 0);
   const revision = claims.filter((c) => c.status === 'INFO_REQUESTED');
@@ -20,6 +40,7 @@ export default function EmployeeDashboard() {
       <PageHeader title="My claims" sub="Track every claim from submission to payment" actionsClassName="employee-dashboard-header-actions">
         <Link className="btn btn-purple" to={p.add}>New claim</Link>
       </PageHeader>
+      <Alert onClose={() => setErr('')}>{err}</Alert>
       <div className="row g-3 mb-4">
         <div className="col-6 col-lg-3"><Stat label="In progress" value={claims.filter((c) => ['SUBMITTED', 'UNDER_REVIEW', 'APPROVED'].includes(c.status)).length} /></div>
         <div className="col-6 col-lg-3"><Stat label="Needs your action" value={revision.length} tone="coral" sub="Revision worklist" /></div>
@@ -45,6 +66,7 @@ export default function EmployeeDashboard() {
                 <td className="text-end" data-label="Actions">
                   <div className="d-flex justify-content-end gap-2">
                     {['DRAFT', 'INFO_REQUESTED'].includes(c.status) && <Link className="btn btn-sm btn-outline-purple" to={p.edit(c.id)}>{c.status === 'DRAFT' ? 'Continue' : 'Revise'}</Link>}
+                    {c.status === 'DRAFT' && <button className="btn btn-sm btn-outline-danger" type="button" aria-label={`Delete draft ${c.title}`} title="Delete draft" disabled={deletingId === c.id} onClick={() => setDeleteTarget(c)}><FiTrash2 /></button>}
                     <Link className="btn btn-sm btn-light" to={p.detail(c.id)}>View</Link>
                   </div>
                 </td>
@@ -52,6 +74,23 @@ export default function EmployeeDashboard() {
             ))}
           </tbody>
         </table></div></div>
+      {deleteTarget && (
+        <div className="modal d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="delete-draft-title" style={{ background: 'rgba(0,0,0,.4)' }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content" style={{ borderRadius: 16 }}>
+              <div className="modal-header">
+                <h2 className="modal-title h5" id="delete-draft-title">Delete draft?</h2>
+                <button className="btn-close" type="button" aria-label="Close" disabled={deletingId === deleteTarget.id} onClick={() => setDeleteTarget(null)} />
+              </div>
+              <div className="modal-body">Delete “{deleteTarget.title}”? This action cannot be undone.</div>
+              <div className="modal-footer">
+                <button className="btn btn-light" type="button" disabled={deletingId === deleteTarget.id} onClick={() => setDeleteTarget(null)}>Cancel</button>
+                <button className="btn btn-danger" type="button" disabled={deletingId === deleteTarget.id} onClick={deleteDraft}>{deletingId === deleteTarget.id ? 'Deleting…' : 'Delete draft'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

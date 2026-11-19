@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { FiGrid, FiPlusCircle, FiList, FiInbox, FiCreditCard, FiUsers, FiUserPlus, FiShield, FiBarChart2, FiClipboard, FiBell, FiLogOut, FiSearch, FiUser, FiMenu, FiX } from 'react-icons/fi';
+import { FiGrid, FiPlusCircle, FiList, FiInbox, FiCreditCard, FiUsers, FiUserPlus, FiShield, FiBarChart2, FiClipboard, FiBell, FiLogOut, FiUser, FiMenu, FiX, FiClock } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { fmtDT, Avatar } from './ui';
@@ -10,7 +10,7 @@ const NAV = {
   employee: [['/employee/dashboard', 'My Claims', FiList],
   //  ['/employee/new-claim', 'New Claim', FiPlusCircle],
     ['/employee/profile', 'My Profile', FiUser]],
-  finance: [['/finance/dashboard', 'Shared Queue', FiInbox], ['/finance/payments', 'Payments', FiCreditCard]],
+  finance: [['/finance/dashboard', 'Shared Queue', FiInbox], ['/finance/history', 'Claim History', FiClock], ['/finance/payments', 'Payments', FiCreditCard]],
   hr: [['/hr/dashboard', 'Today', FiGrid], ['/hr/employees', 'Employees', FiUsers],
   //  ['/hr/employees/new', 'Add Employee', FiUserPlus], 
   ['/hr/finance/employees', 'Finance Employees', FiUsers],
@@ -18,7 +18,6 @@ const NAV = {
   ['/hr/bank-verification', 'Bank Verification', FiShield]],
   admin: [['/admin/dashboard', 'Spend Analytics', FiBarChart2], ['/admin/audit', 'Audit Trail', FiClipboard]],
 };
-const SEARCH = { finance: ['/finance/dashboard', 'Search ticket (EXP-2026-0007) or employee…'] };
 const ROLE = { employee: 'Employee', finance: 'Finance Officer', hr: 'HR Administrator', admin: 'Admin / Executive' };
 
 export default function Layout() {
@@ -28,7 +27,6 @@ export default function Layout() {
   const [open, setOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [toast, setToast] = useState(null);
-  const [q, setQ] = useState('');
   const [passwordPrompt, setPasswordPrompt] = useState(user.role === 'employee' && user.mustChange);
   const last = useRef(0);
   const h = new Date().getHours();
@@ -67,8 +65,6 @@ export default function Layout() {
   }, [mobileNavOpen]);
 
   const markRead = () => api.post('/notifications/read').then(() => { setN((x) => ({ ...x, unread: 0 })); last.current = 0; });
-  const search = SEARCH[user.role];
-
   return (
     <div className="app-shell">
       {mobileNavOpen && <button className="sidebar-backdrop" type="button" aria-label="Close navigation menu" onClick={() => setMobileNavOpen(false)} />}
@@ -94,7 +90,7 @@ export default function Layout() {
         </div>
       </aside>
       <div className="main">
-        <header className={`topbar${search ? ' has-search' : ''}`}>
+        <header className="topbar">
           <button
             className="mobile-nav-toggle"
             type="button"
@@ -106,11 +102,6 @@ export default function Layout() {
             {mobileNavOpen ? <FiX /> : <FiMenu />}
           </button>
           <h1 className="topbar-tagline">Business travel, streamlined</h1>
-          {search && (
-            <form className="search-pill topbar-search" onSubmit={(e) => { e.preventDefault(); nav(`${search[0]}?q=${encodeURIComponent(q)}`); }}>
-              <FiSearch className="text-muted" /><input placeholder={search[1]} value={q} onChange={(e) => setQ(e.target.value)} />
-            </form>
-          )}
           <div className="topbar-notifications position-relative">
             <button className="bell-btn" onClick={() => { setOpen(!open); if (!open && n.unread) markRead(); }} aria-label="Notifications">
               <FiBell />{n.unread > 0 && <span className="badge text-bg-danger position-absolute top-0 start-100 translate-middle rounded-pill" style={{ background: '#e5484d !important', color: '#fff' }}>{n.unread}</span>}

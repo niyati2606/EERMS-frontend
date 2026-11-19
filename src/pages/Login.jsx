@@ -24,7 +24,10 @@ export default function Login() {
 
   const submit = async (e) => {
     e.preventDefault(); setErr(''); setBusy(true);
-    try { nav(await login(email, password), { replace: true }); } catch (x) { setErr(errMsg(x)); } finally { setBusy(false); }
+    try { nav(await login(email, password), { replace: true }); } catch (x) {
+      const message = errMsg(x);
+      setErr(/user not found/i.test(message) ? 'Invalid email or password' : message);
+    } finally { setBusy(false); }
   };
 
   return (

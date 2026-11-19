@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import NotFound from './pages/NotFound';
 import SetPassword from './pages/SetPassword';
 import ForgotPassword from './pages/ForgotPassword';
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
@@ -12,6 +13,7 @@ import ClaimDetail from './pages/employee/ClaimDetail';
 import FinanceDashboard from './pages/finance/FinanceDashboard';
 import ClaimReview from './pages/finance/ClaimReview';
 import Payments from './pages/finance/Payments';
+import ClaimHistory from './pages/finance/ClaimHistory';
 import HrDashboard from './pages/hr/HrDashboard';
 import EmployeeList from './pages/hr/EmployeeList';
 import EmployeeDetail from './pages/hr/EmployeeDetail';
@@ -48,6 +50,7 @@ export default function App() {
       </Route>
       <Route element={<Guard roles={['finance']} />}>
         <Route path="/finance/dashboard" element={<FinanceDashboard />} />
+        <Route path="/finance/history" element={<ClaimHistory />} />
         <Route path="/finance/review/:id" element={<ClaimReview />} />
         <Route path="/finance/payments" element={<Payments />} />
       </Route>
@@ -64,7 +67,7 @@ export default function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/audit" element={<AuditLog />} />
       </Route>
-      <Route path="*" element={<Navigate to={user ? HOME[user.role] : '/login'} replace />} />
+      <Route path="*" element={<NotFound home={user ? HOME[user.role] : '/login'} />} />
     </Routes>
   );
 }

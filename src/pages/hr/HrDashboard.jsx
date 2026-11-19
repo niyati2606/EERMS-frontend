@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import EmployeeTable from '../../components/EmployeeTable';
@@ -8,7 +8,19 @@ export default function HrDashboard() {
   const location = useLocation();
   const [notice, setNotice] = useState(location.state?.notice || '');
   const [s, setS] = useState(null);
-  useEffect(() => { api.get('/hr/stats').then((r) => setS(r.data)); }, []);
+  const loadStats = useCallback(() => api.get('/hr/stats').then((r) => setS(r.data)), []);
+  useEffect(() => {
+    loadStats();
+    const refresh = () => {
+      if (document.visibilityState === 'visible') loadStats();
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [loadStats]);
   if (!s) return <LoadingSkeleton />;
 
   return (

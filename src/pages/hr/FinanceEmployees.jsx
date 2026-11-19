@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiCheck, FiChevronDown, FiCopy, FiEdit2, FiMail, FiSearch, FiUsers } from 'react-icons/fi';
 import { errMsg } from '../../services/api';
 import { getFinanceStaff, resendSetupEmail, updateFinanceStaff } from '../../services/hrService';
 import { Alert, PageHeader, StatusBadge, LoadingSkeleton } from '../../components/ui';
+import { isValidPersonName } from '../../utils/validation';
 
 const BRANCHES = ['Corporate HQ', 'Branch A', 'Branch B'];
 
@@ -22,6 +23,7 @@ export default function FinanceEmployees() {
   const [editTarget, setEditTarget] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [editError, setEditError] = useState('');
+  const [editNameError, setEditNameError] = useState('');
   const [editBusy, setEditBusy] = useState(false);
 
   const normalizedSearch = search.trim().toLowerCase();
@@ -40,7 +42,7 @@ export default function FinanceEmployees() {
     setStatusFilter('');
   };
 
-  const loadEmployees = async () => {
+  const loadEmployees = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -50,9 +52,20 @@ export default function FinanceEmployees() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { loadEmployees(); }, []);
+  useEffect(() => {
+    loadEmployees();
+    const refresh = () => {
+      if (document.visibilityState === 'visible') loadEmployees();
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [loadEmployees]);
 
   const resendSetup = async (employee) => {
     setActionBusy(employee.id);
@@ -92,12 +105,18 @@ export default function FinanceEmployees() {
       branch: employee.branch || 'Corporate HQ',
     });
     setEditError('');
+    setEditNameError('');
   };
 
   const saveEdit = async (event) => {
     event.preventDefault();
-    setEditBusy(true);
     setEditError('');
+    if (!isValidPersonName(editForm.fullName)) {
+      setEditNameError('Full name can contain letters and spaces only.');
+      return;
+    }
+    setEditNameError('');
+    setEditBusy(true);
     try {
       const updated = await updateFinanceStaff(editTarget.id, editForm);
       setEmployees((current) => current.map((employee) => employee.id === updated.id ? updated : employee));
@@ -251,7 +270,8 @@ export default function FinanceEmployees() {
               <div className="modal-body">
                 {editError && <div className="alert alert-danger" role="alert">{editError}</div>}
                 <label className="form-label fw-semibold" htmlFor="edit-finance-name">Full name</label>
-                <input id="edit-finance-name" className="form-control mb-3" required maxLength={150} value={editForm.fullName} onChange={(event) => setEditForm({ ...editForm, fullName: event.target.value })} />
+                <input id="edit-finance-name" className={`form-control${editNameError ? ' is-invalid' : ''}`} required maxLength={150} value={editForm.fullName} aria-invalid={Boolean(editNameError)} aria-describedby={editNameError ? 'edit-finance-name-error' : undefined} onChange={(event) => { setEditForm({ ...editForm, fullName: event.target.value }); setEditNameError(event.target.value && !isValidPersonName(event.target.value) ? 'Full name can contain letters and spaces only.' : ''); }} />
+                {editNameError && <div className="invalid-feedback d-block mb-3" id="edit-finance-name-error">{editNameError}</div>}
                 <label className="form-label fw-semibold" htmlFor="edit-finance-email">Official email</label>
                 <input id="edit-finance-email" type="email" className="form-control mb-3" required maxLength={150} value={editForm.email} onChange={(event) => setEditForm({ ...editForm, email: event.target.value })} />
                 <label className="form-label fw-semibold" htmlFor="edit-finance-phone">Phone number</label>

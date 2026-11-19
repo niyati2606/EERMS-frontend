@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiChevronDown, FiMoreVertical, FiCheckCircle, FiClock, FiXCircle, FiLock, FiUser, FiUsers, FiUserPlus } from 'react-icons/fi';
 import api, { errMsg } from '../services/api';
@@ -36,15 +36,26 @@ export default function EmployeeTable() {
   const box = useRef(null);
 
   useEffect(() => { setQ(sp.get('q') || ''); }, [sp]);
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
     setErr('');
     return api.get('/hr/employees', { params: { q, status: status || undefined } })
       .then((r) => setRows(r.data))
       .catch((e) => setErr(errMsg(e)))
       .finally(() => setLoading(false));
-  };
-  useEffect(() => { load(); }, [q, status]); // eslint-disable-line
+  }, [q, status]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [load]);
   useEffect(() => {
     const close = (e) => { if (box.current && !box.current.contains(e.target)) setMenu(null); };
     document.addEventListener('mousedown', close);

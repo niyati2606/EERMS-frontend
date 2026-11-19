@@ -4,6 +4,7 @@ import { FiCheck } from 'react-icons/fi';
 import { createEmployee, getNextEmployeeCode } from '../../services/hrService';
 import { errMsg, errList } from '../../services/api';
 import { Alert, PageHeader } from '../../components/ui';
+import { isValidPersonName } from '../../utils/validation';
 
 const BRANCHES = ['Corporate HQ', 'Branch A', 'Branch B'];
 const STEPS = ['Profile', 'Bank details', 'Review & Submit'];
@@ -30,10 +31,12 @@ export default function AddEmployee() {
     const req = (k, label) => { if (!String(f[k]).trim()) e[k] = `${label} is required`; };
     if (s === 0) {
       req('fullName', 'Full name'); req('email', 'Official email'); req('phoneNumber', 'Phone'); req('branchLocation', 'Branch location'); req('joiningDate', 'Joining date');
+      if (f.fullName.trim() && !isValidPersonName(f.fullName)) e.fullName = 'Full name can contain letters and spaces only';
       if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Enter a valid email address';
     }
     if (s === 1) {
       req('accountHolderName', 'Account holder name'); req('bankName', 'Bank name'); req('accountNumber', 'Account number'); req('ifscCode', 'IFSC code');
+      if (f.accountHolderName.trim() && !isValidPersonName(f.accountHolderName)) e.accountHolderName = 'Account holder name can contain letters and spaces only';
       if (f.accountNumber && !/^\d{9,18}$/.test(f.accountNumber)) e.accountNumber = 'Account number must be 9–18 digits';
       if (f.ifscCode && !IFSC_RE.test(f.ifscCode.toUpperCase())) e.ifscCode = 'Invalid IFSC (format: ABCD0XXXXXX)';
     }

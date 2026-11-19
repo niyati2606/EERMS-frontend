@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getNextEmployeeCode, createFinanceStaff, getHrMeta } from '../../services/hrService';
 import { errMsg, errList } from '../../services/api';
 import { Alert, PageHeader } from '../../components/ui';
+import { isValidPersonName } from '../../utils/validation';
 
 const BRANCHES = ['Corporate HQ', 'Branch A', 'Branch B'];
 
@@ -34,6 +35,7 @@ export default function AddFinance() {
   const validate = () => {
     const e = {};
     if (!f.fullName.trim()) e.fullName = 'Full name is required';
+    else if (!isValidPersonName(f.fullName)) e.fullName = 'Full name can contain letters and spaces only';
     if (!f.email.trim()) e.email = 'Official email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Enter a valid email address';
     if (!f.phone.trim()) e.phone = 'Phone number is required';

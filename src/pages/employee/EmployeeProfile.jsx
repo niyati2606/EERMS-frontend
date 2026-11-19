@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import api, { errMsg } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Alert, PageHeader, StatusBadge, LoadingSkeleton } from '../../components/ui';
+import { isValidPersonName } from '../../utils/validation';
 
 export default function EmployeeProfile() {
   const { syncUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [personal, setPersonal] = useState({ fullName: '', phone: '' });
+  const [nameError, setNameError] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -23,9 +25,14 @@ export default function EmployeeProfile() {
 
   const savePersonal = async (event) => {
     event.preventDefault();
-    setBusy(true);
     setError('');
     setMessage('');
+    if (!isValidPersonName(personal.fullName)) {
+      setNameError('Full name can contain letters and spaces only.');
+      return;
+    }
+    setNameError('');
+    setBusy(true);
     try {
       const { data } = await api.put('/employee/profile', personal);
       setProfile(data);
@@ -60,7 +67,8 @@ export default function EmployeeProfile() {
                   <div className="row g-3">
                     <div className="col-md-6"><label className="form-label fw-semibold">Employee code</label><div className="form-control-plaintext mb-0">{employee.empCode}</div></div>
                     <div className="col-md-6"><label className="form-label fw-semibold">Official email</label><div className="form-control-plaintext mb-0">{employee.email}</div></div>
-                    <div className="col-md-6"><label className="form-label fw-semibold">Full name</label><input className="form-control" maxLength={150} required value={personal.fullName} onChange={(e) => setPersonal({ ...personal, fullName: e.target.value })} /></div>
+                    <div className="col-md-6"><label className="form-label fw-semibold">Full name</label><input className={`form-control${nameError ? ' is-invalid' : ''}`} maxLength={150} required value={personal.fullName} aria-invalid={Boolean(nameError)} aria-describedby={nameError ? 'profile-name-error' : undefined} onChange={(e) => { setPersonal({ ...personal, fullName: e.target.value }); setNameError(e.target.value && !isValidPersonName(e.target.value) ? 'Full name can contain letters and spaces only.' : ''); }} />
+                      {nameError && <div className="invalid-feedback d-block" id="profile-name-error">{nameError}</div>}</div>
                     <div className="col-md-6"><label className="form-label fw-semibold">Phone</label><input className="form-control" maxLength={20} value={personal.phone} onChange={(e) => setPersonal({ ...personal, phone: e.target.value })} /></div>
                     <div className="col-md-6"><label className="form-label fw-semibold">Branch</label><div className="form-control-plaintext mb-0">{employee.branch || '—'}</div></div>
                     <div className="col-md-6"><label className="form-label fw-semibold">Joining date</label><div className="form-control-plaintext mb-0">{(() => { const m = String(employee.joiningDate || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : '—'; })()}</div></div>
