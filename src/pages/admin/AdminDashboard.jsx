@@ -147,7 +147,10 @@ export default function AdminDashboard() {
   const employeeSummaryPending = visibleEmployeeClaims.reduce((sum, employee) => sum + employee.pendingTotal, 0);
   const claimYearOptions = [...new Set([String(new Date().getUTCFullYear()), ...(a?.quarterYears || []).map(String)])]
     .sort((first, second) => Number(second) - Number(first));
-  const claimBranchOptions = [...new Set((employeeClaims || []).map((employee) => employee.branch))].sort();
+  const claimBranchOptions = [...new Set([
+    ...(a?.byBranch || []).map((branch) => branch.name),
+    ...(employeeClaims || []).map((employee) => employee.branch),
+  ])];
   const resetEmployeeClaimFilters = () => {
     const now = new Date();
     setEmployeeSearch('');
